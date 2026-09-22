@@ -1,0 +1,30 @@
+{
+  "name": "aptfi-preseptor-webapp",
+  "version": "0.4.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "import:wordpress": "node scripts/import-wordpress-csv.mjs",
+    "import:legacy": "node scripts/import-wordpress-final.mjs",
+    "invite:legacy": "node scripts/invite-legacy-users.mjs",
+    "fix:legacy-email": "node scripts/fix-legacy-email.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0",
+    "adm-zip": "^0.5.18",
+    "csv-parse": "^5.6.0",
+    "exceljs": "^4.4.0",
+    "next": "^16.0.0",
+    "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "sanitize-html": "^2.17.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
