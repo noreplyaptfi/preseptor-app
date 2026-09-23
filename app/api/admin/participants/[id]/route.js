@@ -7,7 +7,7 @@ import { overallStatus } from '../../../../../lib/status';
 import { logActivity } from '../../../../../lib/audit';
 
 const roles=['super_admin','event_admin'];
-const participantTypes=['','practitioner','lecturer','lecturer_practitioner'];
+const participantTypes=['practitioner','lecturer','lecturer_practitioner'];
 const sensitiveStra=['stra_number'];
 const sensitiveExperience=['participant_type','practice_type','practice_name','practice_years','teaching_years'];
 function latestByType(docs=[]){const out={};for(const d of docs){if(!out[d.document_type])out[d.document_type]=d}return out}
@@ -27,12 +27,12 @@ export async function PATCH(request,{params}){
     whatsapp:clean(body.whatsapp,50),
     university:clean(body.university,255),
     attendance_mode:clean(body.attendance_mode,20),
-    participant_type:clean(body.participant_type,40),
-    practice_type:clean(body.practice_type,100),
-    practice_name:clean(body.practice_name,255),
+    participant_type:clean(body.participant_type,40)||null,
+    practice_type:clean(body.practice_type,100)||null,
+    practice_name:clean(body.practice_name,255)||null,
     practice_years:Number(body.practice_years||0),
     teaching_years:Number(body.teaching_years||0),
-    stra_number:clean(body.stra_number,100)
+    stra_number:clean(body.stra_number,100)||null
   };
   if(patch.full_name.length<3) return NextResponse.json({message:'Nama peserta wajib diisi.'},{status:422});
   if(!validEmail(patch.email)) return NextResponse.json({message:'Email tidak valid.'},{status:422});
@@ -43,7 +43,7 @@ export async function PATCH(request,{params}){
   if(patch.stra_number&&!validStraNumber(patch.stra_number)) return NextResponse.json({message:'Nomor STRA tidak valid.'},{status:422});
   if(!patch.university) return NextResponse.json({message:'Homebase wajib diisi.'},{status:422});
   if(!allowedModes.includes(patch.attendance_mode)) return NextResponse.json({message:'Mode keikutsertaan tidak valid.'},{status:422});
-  if(!participantTypes.includes(patch.participant_type)) return NextResponse.json({message:'Kategori peserta tidak valid.'},{status:422});
+  if(patch.participant_type!==null&&!participantTypes.includes(patch.participant_type)) return NextResponse.json({message:'Kategori peserta tidak valid.'},{status:422});
 
   if(patch.attendance_mode!==reg.attendance_mode){
     const {data:event}=await db.from('events').select('quota_online,quota_offline').eq('id',reg.event_id).single();
@@ -68,7 +68,8 @@ export async function PATCH(request,{params}){
     if(updateError.code==='23505') return NextResponse.json({message:'Email, WhatsApp, atau nomor STRA sudah digunakan pendaftar lain.'},{status:409});
     if(String(updateError.message||'').includes('quota_online_full')) return NextResponse.json({message:'Kuota Online sudah penuh.'},{status:409});
     if(String(updateError.message||'').includes('quota_offline_full')) return NextResponse.json({message:'Kuota Offline sudah penuh.'},{status:409});
-    return NextResponse.json({message:'Gagal memperbarui data peserta.'},{status:500});
+    console.error('admin participant registration update:',updateError);
+    return NextResponse.json({message:'Gagal memperbarui data peserta.',...(process.env.NODE_ENV!=='production'?{detail:updateError.message,code:updateError.code}: {})},{status:500});
   }
 
   if(authUser&&changed(reg.email,patch.email)){
