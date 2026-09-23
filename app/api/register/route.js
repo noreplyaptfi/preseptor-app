@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '../../../lib/supabase-admin';
 import { resolveEventState } from '../../../lib/event-state';
-import { clean,validEmail,validStraNumber,validateProfessionalData,validateFile,safeFileName,allowedModes } from '../../../lib/validation';
+import { clean,validEmail,validStraNumber,validateProfessionalData,validateFile,validateFileSignature,safeFileName,allowedModes } from '../../../lib/validation';
 import { normalizeEmail,normalizePhone,normalizeStra } from '../../../lib/normalization';
 import { overallStatus } from '../../../lib/status';
 import { logActivity } from '../../../lib/audit';
 import { sendEmail } from '../../../lib/email';
 import { createPasswordSetupToken } from '../../../lib/password-tokens';
 import { registrationEmail } from '../../../lib/email-template';
+import { enforceRequestLimit,requestIp } from '../../../lib/request-rate-limit';
 
 export const runtime='nodejs';
 
@@ -26,6 +27,10 @@ async function findDuplicate(db,eventId,{normalizedEmail,normalizedWhatsapp,norm
 }
 
 export async function POST(request){
+  const contentLength=Number(request.headers.get('content-length')||0);
+  if(contentLength>18*1024*1024) return NextResponse.json({message:'Ukuran unggahan terlalu besar.'},{status:413});
+  const limit=await enforceRequestLimit({scope:'registration',identifier:requestIp(request),limit:20,windowSeconds:600});
+  if(!limit.ok) return NextResponse.json({message:'Terlalu banyak percobaan pendaftaran dari koneksi ini. Silakan coba lagi beberapa menit lagi.'},{status:429,headers:{'Retry-After':String(limit.retryAfter)}});
   const db=getSupabaseAdmin();
   const fd=await request.formData();
   if(clean(fd.get('website'))) return NextResponse.json({ok:true});
@@ -112,7 +117,8 @@ export async function POST(request){
     for(const [type,file] of Object.entries(files)){
       const path=`${created.id}/${type}/${Date.now()}-${safeFileName(file.name)}`;
       const buffer=Buffer.from(await file.arrayBuffer());
-      const {error}=await db.storage.from('preseptor-private').upload(path,buffer,{contentType:file.type,upsert:false});
+      if(!validateFileSignature(buffer,file.type)) throw new Error(`Isi file ${type} tidak sesuai format yang diizinkan.`);
+      const {error}=await db.storage.from('preseptor-private').upload(path,buffer,{contentType:file.type,upsert:false,cacheControl:'3600'});
       if(error) throw error;
       uploaded.push(path);
       await db.from('registration_documents').insert({registration_id:created.id,document_type:type,storage_path:path,original_name:file.name,mime_type:file.type,file_size:file.size,status:'pending'});

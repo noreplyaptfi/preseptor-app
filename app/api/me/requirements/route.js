@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireUser } from '../../../../lib/auth';
 import { getSupabaseAdmin } from '../../../../lib/supabase-admin';
-import { clean,validStraNumber,validateProfessionalData,validateOptionalFile,safeFileName } from '../../../../lib/validation';
+import { clean,validStraNumber,validateProfessionalData,validateOptionalFile,validateFileSignature,safeFileName } from '../../../../lib/validation';
 import { normalizeStra } from '../../../../lib/normalization';
 import { overallStatus } from '../../../../lib/status';
 import { logActivity } from '../../../../lib/audit';
@@ -51,7 +51,8 @@ export async function POST(request){
     if(old?.length){await db.storage.from('preseptor-private').remove(old.map(x=>x.storage_path));await db.from('registration_documents').delete().eq('registration_id',reg.id).eq('document_type',type)}
     const path=`${reg.id}/${type}/${Date.now()}-${safeFileName(file.name)}`;
     const buffer=Buffer.from(await file.arrayBuffer());
-    const {error}=await db.storage.from('preseptor-private').upload(path,buffer,{contentType:file.type});
+    if(!validateFileSignature(buffer,file.type)) return NextResponse.json({message:'Isi file tidak sesuai format JPG, PNG, atau PDF yang valid.'},{status:422});
+    const {error}=await db.storage.from('preseptor-private').upload(path,buffer,{contentType:file.type,cacheControl:'3600'});
     if(error) return NextResponse.json({message:'Gagal mengunggah dokumen.'},{status:500});
     await db.from('registration_documents').insert({registration_id:reg.id,document_type:type,storage_path:path,original_name:file.name,mime_type:file.type,file_size:file.size,status:'pending'});
   }

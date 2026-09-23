@@ -12,11 +12,11 @@ export async function GET(){
     db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',data.id).eq('attendance_mode','Online'),
     db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',data.id).eq('attendance_mode','Offline')
   ]).catch(()=>[{count:0},{count:0},{count:0}]);
-  const capacity={
-    total:{quota:Number(data.quota_total||200),used:Number(total||0)},
-    Online:{quota:Number(data.quota_online||150),used:Number(online||0)},
-    Offline:{quota:Number(data.quota_offline||50),used:Number(offline||0)}
+  const totalOpen=Number(total||0)<Number(data.quota_total||200);
+  const availability={
+    Online:totalOpen&&Number(online||0)<Number(data.quota_online||150),
+    Offline:totalOpen&&Number(offline||0)<Number(data.quota_offline||50)
   };
-  for(const key of Object.keys(capacity)) capacity[key].remaining=Math.max(0,capacity[key].quota-capacity[key].used);
-  return NextResponse.json({event:data,state:resolveEventState(data),capacity});
+  const {quota_total,quota_online,quota_offline,...publicEvent}=data;
+  return NextResponse.json({event:publicEvent,state:resolveEventState(data),availability},{headers:{'Cache-Control':'private, max-age=15, stale-while-revalidate=30'}});
 }

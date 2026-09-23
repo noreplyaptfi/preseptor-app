@@ -24,5 +24,5 @@ export async function GET(request,{params}){
   delete reg.events;
   const bytes=await buildBillingPdf({kind,registration:reg,event});
   const filename=`${kind==='receipt'?'kwitansi':'tagihan'}-${reg.registration_code}.pdf`;
-  return new Response(Buffer.from(bytes),{status:200,headers:{'Content-Type':'application/pdf','Content-Disposition':`inline; filename="${filename}"`,'Cache-Control':'private, no-store','X-Document-Number':billingNumber(kind,reg)}});
+  return new Response(Buffer.from(bytes),{status:200,headers:{'Content-Type':'application/pdf','Content-Disposition':`inline; filename="${filename}"`,'Cache-Control':'private, max-age=300, must-revalidate','X-Document-Number':billingNumber(kind,reg)}});
 }

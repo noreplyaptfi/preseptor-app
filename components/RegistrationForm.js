@@ -26,9 +26,9 @@ export default function RegistrationForm(){
   const [message,setMessage]=useState(null);
   const [universities,setUniversities]=useState([]);
   const [resetKey,setResetKey]=useState(0);
-  const [capacity,setCapacity]=useState(null);
-  async function loadCapacity(){try{const r=await fetch('/api/public/settings',{cache:'no-store'});const j=await r.json();if(r.ok)setCapacity(j.capacity||null)}catch{}}
-  useEffect(()=>{fetch('/universities.json').then(r=>r.json()).then(setUniversities).catch(()=>setUniversities([]));loadCapacity();},[]);
+  const [availability,setAvailability]=useState(null);
+  async function loadAvailability(){try{const r=await fetch('/api/public/settings',{cache:'no-store'});const j=await r.json();if(r.ok)setAvailability(j.availability||null)}catch{}}
+  useEffect(()=>{fetch('/universities.json').then(r=>r.json()).then(setUniversities).catch(()=>setUniversities([]));loadAvailability();},[]);
   const practitioner=['practitioner','lecturer_practitioner'].includes(type);
   const lecturer=['lecturer','lecturer_practitioner'].includes(type);
 
@@ -41,7 +41,7 @@ export default function RegistrationForm(){
       const r=await fetch('/api/register',{method:'POST',body:fd});
       const j=await r.json();
       if(!r.ok){const err=new Error(j.message||'Pendaftaran gagal.');err.duplicate=!!j.duplicate;throw err;}
-      form.reset();setType('');setMode('');setResetKey(v=>v+1);await loadCapacity();
+      form.reset();setType('');setMode('');setResetKey(v=>v+1);await loadAvailability();
       setMessage({ok:true,text:`Pendaftaran berhasil. Nomor pendaftaran: ${j.registrationCode}`,code:j.registrationCode,emailSent:j.emailSent});
       window.scrollTo({top:0,behavior:'smooth'});
     }catch(err){setMessage({ok:false,text:err.message,duplicate:!!err.duplicate});window.scrollTo({top:0,behavior:'smooth'});}finally{setBusy(false)}
@@ -87,8 +87,7 @@ export default function RegistrationForm(){
 
       <section className="form-section-card" id="mode">
         <div className="form-section-heading"><span className="section-number">04</span><div><div className="eyebrow brand-blue">Keikutsertaan</div><h2>Pilih mode pelatihan</h2><p>Pilih salah satu mode yang akan diikuti selama kegiatan.</p></div></div>
-        {capacity&&<div className="capacity-overview"><div><span>Total peserta</span><strong>{capacity.total.used}/{capacity.total.quota}</strong><small>Sisa {capacity.total.remaining} tempat</small></div><div><span>Online</span><strong>{capacity.Online.used}/{capacity.Online.quota}</strong><small>Sisa {capacity.Online.remaining}</small></div><div><span>Offline</span><strong>{capacity.Offline.used}/{capacity.Offline.quota}</strong><small>Sisa {capacity.Offline.remaining}</small></div></div>}
-        <div className="choice-input-grid two"><ChoiceCard name="attendance_mode" value="Online" checked={mode==='Online'} onChange={e=>setMode(e.target.value)} title="Online" description="Mengikuti melalui Zoom Meeting" disabled={capacity?.Online?.remaining===0} badge={capacity?capacity.Online.remaining>0?`Sisa ${capacity.Online.remaining} dari ${capacity.Online.quota}`:'Kuota penuh':''}/><ChoiceCard name="attendance_mode" value="Offline" checked={mode==='Offline'} onChange={e=>setMode(e.target.value)} title="Offline" description="Kampus Farmasi Universitas Andalas" disabled={capacity?.Offline?.remaining===0} badge={capacity?capacity.Offline.remaining>0?`Sisa ${capacity.Offline.remaining} dari ${capacity.Offline.quota}`:'Kuota penuh':''}/></div>
+        <div className="choice-input-grid two"><ChoiceCard name="attendance_mode" value="Online" checked={mode==='Online'} onChange={e=>setMode(e.target.value)} title="Online" description="Mengikuti melalui Zoom Meeting" disabled={availability?.Online===false} badge={availability?.Online===false?'Kuota penuh':''}/><ChoiceCard name="attendance_mode" value="Offline" checked={mode==='Offline'} onChange={e=>setMode(e.target.value)} title="Offline" description="Kampus Farmasi Universitas Andalas" disabled={availability?.Offline===false} badge={availability?.Offline===false?'Kuota penuh':''}/></div>
       </section>
 
       <section className="form-section-card" id="pembayaran">

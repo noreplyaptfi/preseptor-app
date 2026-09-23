@@ -12,8 +12,8 @@ export async function POST(request) {
   if (!token || token.length < 20) {
     return NextResponse.json({ message: 'Tautan aktivasi/reset tidak valid.' }, { status: 422 });
   }
-  if (password.length < 8) {
-    return NextResponse.json({ message: 'Password minimal 8 karakter.' }, { status: 422 });
+  if (password.length < 10 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+    return NextResponse.json({ message: 'Password minimal 10 karakter dan harus mengandung huruf serta angka.' }, { status: 422 });
   }
   if (password !== confirm) {
     return NextResponse.json({ message: 'Konfirmasi password tidak sama.' }, { status: 422 });

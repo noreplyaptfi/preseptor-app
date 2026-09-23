@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireUser } from '../../../../lib/auth';
 import { getSupabaseAdmin } from '../../../../lib/supabase-admin';
-import { validateFile,safeFileName } from '../../../../lib/validation';
+import { validateFile,validateFileSignature,safeFileName } from '../../../../lib/validation';
 import { overallStatus } from '../../../../lib/status';
 import { logActivity } from '../../../../lib/audit';
 export const runtime='nodejs';

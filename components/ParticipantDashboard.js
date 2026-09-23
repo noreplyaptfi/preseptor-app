@@ -1,5 +1,5 @@
 'use client';
-import { useEffect,useState } from 'react';
+import { useEffect,useRef,useState } from 'react';
 import { getSupabaseBrowser } from '../lib/supabase-browser';
 
 const statusLabel={incomplete:'Perlu dilengkapi',pending:'Menunggu verifikasi',valid:'Valid',rejected:'Perlu perbaikan',verified:'Terverifikasi'};
@@ -10,15 +10,16 @@ function fmtDate(v){if(!v)return '';try{return new Intl.DateTimeFormat('id-ID',{
 export default function ParticipantDashboard(){
   const [data,setData]=useState(null),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[type,setType]=useState('');
   const [tab,setTab]=useState('registration'),[announcements,setAnnouncements]=useState([]),[unreadCount,setUnreadCount]=useState(0),[selectedAnnouncement,setSelectedAnnouncement]=useState(null);
-  const [eventAccess,setEventAccess]=useState(null),[accessLoading,setAccessLoading]=useState(false);
+  const [eventAccess,setEventAccess]=useState(null),[accessLoading,setAccessLoading]=useState(false),[billingModal,setBillingModal]=useState(null);
+  const billingCache=useRef(new Map());
   async function token(){const {data}=await getSupabaseBrowser().auth.getSession();return data.session?.access_token||''}
   async function loadAnnouncements(){const t=await token();if(!t)return;const r=await fetch('/api/me/announcements',{headers:{Authorization:`Bearer ${t}`}});const j=await r.json();if(r.ok){setAnnouncements(j.announcements||[]);setUnreadCount(j.unreadCount||0)}}
   async function loadEventAccess(){const t=await token();if(!t)return;setAccessLoading(true);const r=await fetch('/api/me/event-access',{headers:{Authorization:`Bearer ${t}`},cache:'no-store'});const j=await r.json().catch(()=>({}));if(r.ok)setEventAccess(j);setAccessLoading(false)}
   async function load(){const t=await token();if(!t){location.href='/login';return}const r=await fetch('/api/me/registrations',{headers:{Authorization:`Bearer ${t}`}});const j=await r.json();if(!r.ok)setError(j.message);else{setData(j.registration);setType(j.registration?.participant_type||'')}await Promise.all([loadAnnouncements(),loadEventAccess()])}
-  useEffect(()=>{const requested=new URLSearchParams(location.search).get('tab');if(['announcements','access'].includes(requested))setTab(requested);load()},[]);
+  useEffect(()=>{const requested=new URLSearchParams(location.search).get('tab');if(['announcements','access'].includes(requested))setTab(requested);load();return()=>{for(const item of billingCache.current.values()){if(item?.url)URL.revokeObjectURL(item.url)}}},[]);
   async function complete(e){e.preventDefault();setBusy(true);setError('');setNotice('');const t=await token();const fd=new FormData(e.currentTarget);const r=await fetch('/api/me/requirements',{method:'POST',headers:{Authorization:`Bearer ${t}`},body:fd});const j=await r.json();if(!r.ok)setError(j.message);else{setNotice('Dokumen persyaratan berhasil dikirim ulang dan menunggu verifikasi.');await load()}setBusy(false)}
   async function reuploadPayment(e){e.preventDefault();setBusy(true);setError('');setNotice('');const t=await token();const fd=new FormData(e.currentTarget);const r=await fetch('/api/me/payment',{method:'POST',headers:{Authorization:`Bearer ${t}`},body:fd});const j=await r.json();if(!r.ok)setError(j.message);else{setNotice('Bukti pembayaran berhasil dikirim ulang dan menunggu verifikasi.');await load()}setBusy(false)}
-  async function openBilling(kind){try{setError('');const t=await token();const r=await fetch(`/api/billing/${kind}?id=${data.id}`,{headers:{Authorization:`Bearer ${t}`}});if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.message||'Dokumen belum tersedia.')}const blob=await r.blob();const url=URL.createObjectURL(blob);window.open(url,'_blank','noopener,noreferrer');setTimeout(()=>URL.revokeObjectURL(url),60000)}catch(e){setError(e.message)}}
+  async function openBilling(kind){try{setError('');const cached=billingCache.current.get(kind);if(cached?.url){setBillingModal({loading:false,kind,url:cached.url});return}setBillingModal({loading:true,kind});const t=await token();const r=await fetch(`/api/billing/${kind}?id=${data.id}`,{headers:{Authorization:`Bearer ${t}`}});if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.message||'Dokumen belum tersedia.')}const blob=await r.blob();const url=URL.createObjectURL(blob);billingCache.current.set(kind,{url});setBillingModal({loading:false,kind,url})}catch(e){setBillingModal(null);setError(e.message)}}
   async function openAnnouncement(a){setSelectedAnnouncement(a);if(!a.is_read){const t=await token();await fetch('/api/me/announcements',{method:'POST',headers:{Authorization:`Bearer ${t}`,'Content-Type':'application/json'},body:JSON.stringify({announcementId:a.id})});setAnnouncements(list=>list.map(x=>x.id===a.id?{...x,is_read:true,read_at:new Date().toISOString()}:x));setUnreadCount(v=>Math.max(0,v-1))}}
   async function logout(){await getSupabaseBrowser().auth.signOut();location.href='/'}
   if(!data&&!error)return <main className="participant-shell"><div className="participant-appbar"><img src="/aptfi-logo.png" alt="APTFI"/></div><div className="participant-loading"><div className="spinner"/><p>Memuat pendaftaran...</p></div></main>;
@@ -54,7 +55,15 @@ export default function ParticipantDashboard(){
       {!['incomplete','rejected'].includes(data.requirements_status)&&<section className="participant-card info-card"><div className="info-icon">✓</div><div><h3>Dokumen sudah diterima</h3><p>{data.requirements_status==='valid'?'Dokumen persyaratan telah dinyatakan valid oleh panitia.':'Dokumen Anda sedang diperiksa oleh panitia.'}</p></div></section>}
     </>}
     <footer className="participant-footer"><span>APTFI · Pelatihan Preseptor 2026</span><a href="/">Beranda</a></footer>
+    {billingModal&&<ParticipantBillingModal modal={billingModal} registrationCode={data.registration_code} onClose={()=>setBillingModal(null)}/>}
   </div></main>
+}
+
+
+function ParticipantBillingModal({modal,registrationCode,onClose}){
+  const title=modal.kind==='receipt'?'Kwitansi Pembayaran':'Tagihan / Invoice';
+  if(modal.loading)return <div className="modal-backdrop"><div className="billing-modal loading-modal"><div className="spinner"/><p>Menyiapkan {title.toLowerCase()}...</p><small>Dokumen akan tampil di halaman ini.</small></div></div>;
+  return <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><section className="billing-modal participant-billing-modal"><header className="document-modal-header"><div><div className="eyebrow brand-blue">Dokumen Keuangan</div><h2>{title}</h2><p>{registrationCode}</p></div><button className="modal-close" onClick={onClose} aria-label="Tutup">×</button></header><div className="billing-preview"><iframe title={title} src={modal.url}/></div><footer className="billing-modal-actions"><a className="btn btn-secondary" href={modal.url} target="_blank" rel="noreferrer">Buka tab baru ↗</a><a className="btn btn-brand-primary" href={modal.url} download={`${modal.kind==='receipt'?'kwitansi':'tagihan'}-${registrationCode}.pdf`}>Unduh PDF</a></footer></section></div>
 }
 
 function AnnouncementPanel({announcements,unreadCount,selectedAnnouncement,openAnnouncement,close}){

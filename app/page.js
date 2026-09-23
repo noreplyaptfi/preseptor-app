@@ -27,18 +27,19 @@ export default async function Home(){
         </div>
         <aside className="landing-info-card">
           <div className="info-ribbon">Pendaftaran</div>
-          <div className="landing-info-block"><small>Batas pendaftaran</small><strong>1 Oktober 2026</strong><span>atau jika kuota telah terpenuhi</span></div>
+          <div className="landing-info-block"><small>Batas pendaftaran</small><strong>1 Oktober 2026</strong><span>Pastikan pendaftaran diselesaikan sebelum batas waktu.</span></div>
           <div className="landing-info-block"><small>Biaya pendaftaran</small><strong>Rp 1.000.000</strong><span>BNI 6666512055 · a.n APTFI</span></div>
           <div className="landing-info-block"><small>Syarat utama</small><ul><li>Memiliki STRA</li><li>Pengalaman praktik/mengajar sesuai ketentuan</li></ul></div>
           <a href="/panduan" className="text-link">Lihat persyaratan lengkap →</a>
         </aside>
       </section>
       <PublicEventSummary/>
-      <section className="landing-choice-section">
-        <div className="section-intro"><div className="eyebrow brand-blue">Mulai dari sini</div><h2>Pilih langkah yang paling sesuai</h2><p>Jika baru pertama kali membuka halaman ini, kami sarankan membaca panduan singkat sebelum mengisi form.</p></div>
-        <div className="choice-grid">
-          <a className="choice-card guide" href="/panduan"><span className="choice-number">01</span><div><h3>Baca Panduan</h3><p>Lihat syarat peserta, dokumen yang perlu disiapkan, alur verifikasi, dan tahapan setelah mendaftar.</p><strong>Pelajari tata cara →</strong></div></a>
-          <a className="choice-card register" href="/daftar"><span className="choice-number">02</span><div><h3>Daftar Sekarang</h3><p>Sudah menyiapkan STRA, bukti pengalaman, dan bukti pembayaran? Lanjutkan ke formulir.</p><strong>Buka formulir →</strong></div></a>
+      <section className="landing-choice-section landing-prep-section">
+        <div className="section-intro"><div className="eyebrow brand-blue">Sebelum mendaftar</div><h2>Siapkan dokumen utama</h2><p>Pastikan dokumen terbaca jelas agar proses verifikasi panitia lebih cepat.</p></div>
+        <div className="prep-grid">
+          <article className="prep-card"><span>01</span><div><h3>STRA</h3><p>Siapkan nomor dan scan/foto STRA yang masih dapat dibaca dengan jelas.</p></div></article>
+          <article className="prep-card"><span>02</span><div><h3>Bukti pengalaman</h3><p>Gunakan surat keterangan, SK, atau dokumen resmi yang menunjukkan masa praktik/mengajar.</p></div></article>
+          <article className="prep-card"><span>03</span><div><h3>Bukti pembayaran</h3><p>Siapkan bukti transfer sesuai informasi rekening pada formulir pendaftaran.</p></div></article>
         </div>
       </section>
       <footer className="public-footer"><span>© 2026 Asosiasi Pendidikan Tinggi Farmasi Indonesia</span><a href="/login">Dashboard Peserta</a></footer>
