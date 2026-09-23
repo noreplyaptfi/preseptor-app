@@ -1,5 +1,6 @@
 import './globals.css';
 import { Lato } from 'next/font/google';
+import SupportWhatsApp from '../components/SupportWhatsApp';
 
 const lato=Lato({
   subsets:['latin'],
@@ -15,5 +16,5 @@ export const metadata={
 };
 
 export default function RootLayout({children}){
-  return <html lang="id"><body className={lato.variable}>{children}</body></html>;
+  return <html lang="id"><body className={lato.variable}>{children}<SupportWhatsApp/></body></html>;
 }

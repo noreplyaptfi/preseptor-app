@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import UniversityCombobox from './UniversityCombobox';
 
 function FileUpload({name,label,description,required=true}){
   const [fileName,setFileName]=useState('');
@@ -28,7 +29,7 @@ export default function RegistrationForm(){
   const [resetKey,setResetKey]=useState(0);
   const [availability,setAvailability]=useState(null);
   async function loadAvailability(){try{const r=await fetch('/api/public/settings',{cache:'no-store'});const j=await r.json();if(r.ok)setAvailability(j.availability||null)}catch{}}
-  useEffect(()=>{fetch('/universities.json').then(r=>r.json()).then(setUniversities).catch(()=>setUniversities([]));loadAvailability();},[]);
+  useEffect(()=>{fetch('/api/universities').then(async r=>{if(!r.ok)throw new Error('homebase');const j=await r.json();return j.universities||[]}).then(setUniversities).catch(()=>fetch('/universities.json').then(r=>r.json()).then(setUniversities).catch(()=>setUniversities([])));loadAvailability();},[]);
   const practitioner=['practitioner','lecturer_practitioner'].includes(type);
   const lecturer=['lecturer','lecturer_practitioner'].includes(type);
 
@@ -67,7 +68,7 @@ export default function RegistrationForm(){
           <div className="field"><label>Nama lengkap beserta gelar <b>*</b></label><input name="full_name" required maxLength="255" placeholder="Contoh: apt. Ahmad Fauzan, M.Farm." /></div>
           <div className="field"><label>Email aktif <b>*</b></label><input name="email" type="email" required placeholder="nama@email.com"/><small>Dipakai untuk login dan seluruh notifikasi pendaftaran.</small></div>
           <div className="field"><label>Nomor WhatsApp <b>*</b></label><input name="whatsapp" inputMode="tel" required placeholder="08xxxxxxxxxx"/></div>
-          <div className="field"><label>Homebase perguruan tinggi <b>*</b></label><input name="university" list="aptfi-universities" required placeholder="Cari nama perguruan tinggi"/><datalist id="aptfi-universities">{universities.map(u=><option key={u} value={u}/>)}</datalist></div>
+          <div className="field"><label>Homebase perguruan tinggi <b>*</b></label><UniversityCombobox name="university" universities={universities} required/><small>Ketik nama kampus lalu pilih dari daftar yang muncul.</small></div>
         </div>
       </section>
 
