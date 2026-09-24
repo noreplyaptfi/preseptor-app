@@ -1,6 +1,7 @@
 'use client';
 import { useEffect,useRef,useState } from 'react';
 import { getSupabaseBrowser } from '../lib/supabase-browser';
+import { fileMeta, parseApiResponse, uploadSignedFiles } from '../lib/direct-upload-client';
 
 const statusLabel={incomplete:'Perlu dilengkapi',pending:'Menunggu verifikasi',valid:'Valid',rejected:'Perlu perbaikan',verified:'Terverifikasi'};
 function statusClass(v){return ['valid','verified'].includes(v)?'status-ok':v==='rejected'?'status-bad':'status-pending'}
@@ -17,8 +18,33 @@ export default function ParticipantDashboard(){
   async function loadEventAccess(){const t=await token();if(!t)return;setAccessLoading(true);const r=await fetch('/api/me/event-access',{headers:{Authorization:`Bearer ${t}`},cache:'no-store'});const j=await r.json().catch(()=>({}));if(r.ok)setEventAccess(j);setAccessLoading(false)}
   async function load(){const t=await token();if(!t){location.href='/login';return}const r=await fetch('/api/me/registrations',{headers:{Authorization:`Bearer ${t}`}});const j=await r.json();if(!r.ok)setError(j.message);else{setData(j.registration);setType(j.registration?.participant_type||'')}await Promise.all([loadAnnouncements(),loadEventAccess()])}
   useEffect(()=>{const requested=new URLSearchParams(location.search).get('tab');if(['announcements','access'].includes(requested))setTab(requested);load();return()=>{for(const item of billingCache.current.values()){if(item?.url)URL.revokeObjectURL(item.url)}}},[]);
-  async function complete(e){e.preventDefault();setBusy(true);setError('');setNotice('');const t=await token();const fd=new FormData(e.currentTarget);const r=await fetch('/api/me/requirements',{method:'POST',headers:{Authorization:`Bearer ${t}`},body:fd});const j=await r.json();if(!r.ok)setError(j.message);else{setNotice('Dokumen persyaratan berhasil dikirim ulang dan menunggu verifikasi.');await load()}setBusy(false)}
-  async function reuploadPayment(e){e.preventDefault();setBusy(true);setError('');setNotice('');const t=await token();const fd=new FormData(e.currentTarget);const r=await fetch('/api/me/payment',{method:'POST',headers:{Authorization:`Bearer ${t}`},body:fd});const j=await r.json();if(!r.ok)setError(j.message);else{setNotice('Bukti pembayaran berhasil dikirim ulang dan menunggu verifikasi.');await load()}setBusy(false)}
+  async function complete(e){
+    e.preventDefault();setBusy(true);setError('');setNotice('');
+    try{
+      const t=await token(),fd=new FormData(e.currentTarget);
+      const fileMap={stra:fd.get('stra_proof'),experience:fd.get('experience_proof')};
+      const files=Object.fromEntries(Object.entries(fileMap).map(([k,f])=>[k,fileMeta(f)]).filter(([,v])=>v));
+      let uploaded={};
+      if(Object.keys(files).length){
+        const pr=await fetch('/api/me/uploads/prepare',{method:'POST',headers:{Authorization:`Bearer ${t}`,'Content-Type':'application/json'},body:JSON.stringify({purpose:'requirements',files})});
+        const pj=await parseApiResponse(pr);if(!pr.ok)throw new Error(pj.message||'Gagal menyiapkan unggahan.');
+        await uploadSignedFiles(pj.uploads,fileMap);uploaded=pj.uploads;
+      }
+      const payload={stra_number:fd.get('stra_number'),participant_type:fd.get('participant_type'),practice_type:fd.get('practice_type'),practice_name:fd.get('practice_name'),practice_years:fd.get('practice_years'),teaching_years:fd.get('teaching_years'),files:uploaded};
+      const r=await fetch('/api/me/requirements',{method:'POST',headers:{Authorization:`Bearer ${t}`,'Content-Type':'application/json'},body:JSON.stringify(payload)});const j=await parseApiResponse(r);if(!r.ok)throw new Error(j.message||'Gagal menyimpan dokumen.');
+      setNotice('Dokumen persyaratan berhasil dikirim ulang dan menunggu verifikasi.');await load();
+    }catch(err){setError(err?.message==='Failed to fetch'?'Koneksi terputus saat mengunggah dokumen. Silakan coba lagi dengan koneksi yang stabil.':(err?.message||'Gagal mengunggah dokumen.'))}finally{setBusy(false)}
+  }
+  async function reuploadPayment(e){
+    e.preventDefault();setBusy(true);setError('');setNotice('');
+    try{
+      const t=await token(),fd=new FormData(e.currentTarget),file=fd.get('payment_proof');
+      const pr=await fetch('/api/me/uploads/prepare',{method:'POST',headers:{Authorization:`Bearer ${t}`,'Content-Type':'application/json'},body:JSON.stringify({purpose:'payment',files:{payment_proof:fileMeta(file)}})});const pj=await parseApiResponse(pr);if(!pr.ok)throw new Error(pj.message||'Gagal menyiapkan unggahan.');
+      await uploadSignedFiles(pj.uploads,{payment_proof:file});
+      const r=await fetch('/api/me/payment',{method:'POST',headers:{Authorization:`Bearer ${t}`,'Content-Type':'application/json'},body:JSON.stringify({files:pj.uploads})});const j=await parseApiResponse(r);if(!r.ok)throw new Error(j.message||'Gagal menyimpan bukti pembayaran.');
+      setNotice('Bukti pembayaran berhasil dikirim ulang dan menunggu verifikasi.');await load();
+    }catch(err){setError(err?.message==='Failed to fetch'?'Koneksi terputus saat mengunggah bukti pembayaran. Silakan coba lagi.':(err?.message||'Gagal mengunggah bukti pembayaran.'))}finally{setBusy(false)}
+  }
   async function openBilling(kind){try{setError('');const cached=billingCache.current.get(kind);if(cached?.url){setBillingModal({loading:false,kind,url:cached.url});return}setBillingModal({loading:true,kind});const t=await token();const r=await fetch(`/api/billing/${kind}?id=${data.id}`,{headers:{Authorization:`Bearer ${t}`}});if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.message||'Dokumen belum tersedia.')}const blob=await r.blob();const url=URL.createObjectURL(blob);billingCache.current.set(kind,{url});setBillingModal({loading:false,kind,url})}catch(e){setBillingModal(null);setError(e.message)}}
   async function openAnnouncement(a){setSelectedAnnouncement(a);if(!a.is_read){const t=await token();await fetch('/api/me/announcements',{method:'POST',headers:{Authorization:`Bearer ${t}`,'Content-Type':'application/json'},body:JSON.stringify({announcementId:a.id})});setAnnouncements(list=>list.map(x=>x.id===a.id?{...x,is_read:true,read_at:new Date().toISOString()}:x));setUnreadCount(v=>Math.max(0,v-1))}}
   async function logout(){await getSupabaseBrowser().auth.signOut();location.href='/'}

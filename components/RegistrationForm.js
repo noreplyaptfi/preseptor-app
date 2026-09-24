@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import UniversityCombobox from './UniversityCombobox';
+import { fileMeta, parseApiResponse, uploadSignedFiles } from '../lib/direct-upload-client';
 
 function FileUpload({name,label,description,required=true}){
   const [fileName,setFileName]=useState('');
@@ -28,6 +29,7 @@ export default function RegistrationForm(){
   const [universities,setUniversities]=useState([]);
   const [resetKey,setResetKey]=useState(0);
   const [availability,setAvailability]=useState(null);
+  const [uploadProgress,setUploadProgress]=useState('');
   async function loadAvailability(){try{const r=await fetch('/api/public/settings',{cache:'no-store'});const j=await r.json();if(r.ok)setAvailability(j.availability||null)}catch{}}
   useEffect(()=>{fetch('/api/universities').then(async r=>{if(!r.ok)throw new Error('homebase');const j=await r.json();return j.universities||[]}).then(setUniversities).catch(()=>fetch('/universities.json').then(r=>r.json()).then(setUniversities).catch(()=>setUniversities([])));loadAvailability();},[]);
   const practitioner=['practitioner','lecturer_practitioner'].includes(type);
@@ -36,16 +38,35 @@ export default function RegistrationForm(){
   async function submit(e){
     e.preventDefault();
     const form=e.currentTarget;
-    setBusy(true);setMessage(null);
+    setBusy(true);setMessage(null);setUploadProgress('Memeriksa data pendaftaran...');
     const fd=new FormData(form);
+    const files={
+      stra:fd.get('stra_proof'),
+      experience:fd.get('experience_proof'),
+      payment_proof:fd.get('payment_proof')
+    };
+    const payload={
+      full_name:fd.get('full_name'),email:fd.get('email'),whatsapp:fd.get('whatsapp'),university:fd.get('university'),
+      participant_type:fd.get('participant_type'),stra_number:fd.get('stra_number'),practice_type:fd.get('practice_type'),practice_name:fd.get('practice_name'),practice_years:fd.get('practice_years'),teaching_years:fd.get('teaching_years'),attendance_mode:fd.get('attendance_mode'),confirm_data:fd.get('confirm_data'),website:fd.get('website'),
+      files:{stra:fileMeta(files.stra),experience:fileMeta(files.experience),payment_proof:fileMeta(files.payment_proof)}
+    };
     try{
-      const r=await fetch('/api/register',{method:'POST',body:fd});
-      const j=await r.json();
-      if(!r.ok){const err=new Error(j.message||'Pendaftaran gagal.');err.duplicate=!!j.duplicate;throw err;}
+      const prep=await fetch('/api/register/prepare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const prepJson=await parseApiResponse(prep);
+      if(!prep.ok){const err=new Error(prepJson.message||'Pendaftaran gagal diproses.');err.duplicate=!!prepJson.duplicate;throw err;}
+      setUploadProgress('Menyiapkan unggahan dokumen...');
+      await uploadSignedFiles(prepJson.uploads,files,({step,total,fileName})=>setUploadProgress(`Mengunggah dokumen ${step}/${total}: ${fileName}`));
+      setUploadProgress('Menyimpan pendaftaran...');
+      const final=await fetch('/api/register/finalize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:prepJson.sessionId})});
+      const j=await parseApiResponse(final);
+      if(!final.ok){const err=new Error(j.message||'Pendaftaran gagal disimpan.');err.duplicate=!!j.duplicate;throw err;}
       form.reset();setType('');setMode('');setResetKey(v=>v+1);await loadAvailability();
       setMessage({ok:true,text:`Pendaftaran berhasil. Nomor pendaftaran: ${j.registrationCode}`,code:j.registrationCode,emailSent:j.emailSent});
       window.scrollTo({top:0,behavior:'smooth'});
-    }catch(err){setMessage({ok:false,text:err.message,duplicate:!!err.duplicate});window.scrollTo({top:0,behavior:'smooth'});}finally{setBusy(false)}
+    }catch(err){
+      const friendly=err?.message==='Failed to fetch'?'Koneksi ke server terputus saat mengirim data. Pastikan internet stabil lalu coba kembali. Dokumen yang besar kini diunggah langsung ke penyimpanan aman.':(err?.message||'Pendaftaran gagal diproses.');
+      setMessage({ok:false,text:friendly,duplicate:!!err.duplicate});window.scrollTo({top:0,behavior:'smooth'});
+    }finally{setBusy(false);setUploadProgress('')}
   }
 
   return <div className="registration-layout">
@@ -101,7 +122,7 @@ export default function RegistrationForm(){
         <div className="form-section-heading"><span className="section-number">06</span><div><div className="eyebrow brand-blue">Konfirmasi</div><h2>Periksa sebelum dikirim</h2><p>Setelah dikirim, Anda akan menerima nomor pendaftaran dan email aktivasi akun peserta.</p></div></div>
         <label className="agreement"><input type="checkbox" name="confirm_data" value="1" required/><span>Saya menyatakan bahwa data dan dokumen yang saya unggah benar, milik saya, dan dapat dipertanggungjawabkan.</span></label>
         <input name="website" className="hidden" tabIndex="-1" autoComplete="off"/>
-        <div className="submit-actions"><a href="/panduan" className="text-link">Baca panduan kembali</a><button className="btn btn-brand-primary submit-button" disabled={busy}>{busy?'Mengirim pendaftaran...':'Kirim Pendaftaran'}</button></div>
+        <div className="submit-actions"><a href="/panduan" className="text-link">Baca panduan kembali</a><div className="submit-progress-wrap">{busy&&uploadProgress&&<small className="submit-progress">{uploadProgress}</small>}<button className="btn btn-brand-primary submit-button" disabled={busy}>{busy?'Memproses...':'Kirim Pendaftaran'}</button></div></div>
       </section>
     </form>
   </div>
