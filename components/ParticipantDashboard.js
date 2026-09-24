@@ -19,9 +19,11 @@ export default function ParticipantDashboard(){
   async function load(){const t=await token();if(!t){location.href='/login';return}const r=await fetch('/api/me/registrations',{headers:{Authorization:`Bearer ${t}`}});const j=await r.json();if(!r.ok)setError(j.message);else{setData(j.registration);setType(j.registration?.participant_type||'')}await Promise.all([loadAnnouncements(),loadEventAccess()])}
   useEffect(()=>{const requested=new URLSearchParams(location.search).get('tab');if(['announcements','access'].includes(requested))setTab(requested);load();return()=>{for(const item of billingCache.current.values()){if(item?.url)URL.revokeObjectURL(item.url)}}},[]);
   async function complete(e){
-    e.preventDefault();setBusy(true);setError('');setNotice('');
+    e.preventDefault();
+    const form=e.currentTarget;
+    setBusy(true);setError('');setNotice('');
     try{
-      const t=await token(),fd=new FormData(e.currentTarget);
+      const t=await token(),fd=new FormData(form);
       const fileMap={stra:fd.get('stra_proof'),experience:fd.get('experience_proof')};
       const files=Object.fromEntries(Object.entries(fileMap).map(([k,f])=>[k,fileMeta(f)]).filter(([,v])=>v));
       let uploaded={};
@@ -36,9 +38,11 @@ export default function ParticipantDashboard(){
     }catch(err){setError(err?.message==='Failed to fetch'?'Koneksi terputus saat mengunggah dokumen. Silakan coba lagi dengan koneksi yang stabil.':(err?.message||'Gagal mengunggah dokumen.'))}finally{setBusy(false)}
   }
   async function reuploadPayment(e){
-    e.preventDefault();setBusy(true);setError('');setNotice('');
+    e.preventDefault();
+    const form=e.currentTarget;
+    setBusy(true);setError('');setNotice('');
     try{
-      const t=await token(),fd=new FormData(e.currentTarget),file=fd.get('payment_proof');
+      const t=await token(),fd=new FormData(form),file=fd.get('payment_proof');
       const pr=await fetch('/api/me/uploads/prepare',{method:'POST',headers:{Authorization:`Bearer ${t}`,'Content-Type':'application/json'},body:JSON.stringify({purpose:'payment',files:{payment_proof:fileMeta(file)}})});const pj=await parseApiResponse(pr);if(!pr.ok)throw new Error(pj.message||'Gagal menyiapkan unggahan.');
       await uploadSignedFiles(pj.uploads,{payment_proof:file});
       const r=await fetch('/api/me/payment',{method:'POST',headers:{Authorization:`Bearer ${t}`,'Content-Type':'application/json'},body:JSON.stringify({files:pj.uploads})});const j=await parseApiResponse(r);if(!r.ok)throw new Error(j.message||'Gagal menyimpan bukti pembayaran.');
