@@ -1,6 +1,6 @@
 {
   "name": "aptfi-preseptor-webapp",
-  "version": "0.4.4",
+  "version": "0.4.9",
   "private": true,
   "scripts": {
     "dev": "next dev",

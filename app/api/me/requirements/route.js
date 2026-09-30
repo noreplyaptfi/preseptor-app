@@ -1,42 +1,14 @@
 import { NextResponse } from 'next/server';
 import { requireUser } from '../../../../lib/auth';
 import { getSupabaseAdmin } from '../../../../lib/supabase-admin';
-import { clean,validStraNumber,validateProfessionalData } from '../../../../lib/validation';
+import { clean,validStraNumber } from '../../../../lib/validation';
 import { normalizeStra } from '../../../../lib/normalization';
 import { overallStatus } from '../../../../lib/status';
 import { logActivity } from '../../../../lib/audit';
 import { verifyStoredUpload } from '../../../../lib/direct-upload';
+import { masterOptions,validateProfessionalWithMaster } from '../../../../lib/master-data';
 export const runtime='nodejs';
-
 async function latestDoc(db,registrationId,type){const {data}=await db.from('registration_documents').select('*').eq('registration_id',registrationId).eq('document_type',type).order('created_at',{ascending:false}).limit(1).maybeSingle();return data}
-
 export async function POST(request){
-  const auth=await requireUser(request);if(auth.error)return NextResponse.json({message:auth.error},{status:auth.status});
-  const db=getSupabaseAdmin();
-  const {data:reg}=await db.from('registrations').select('*').ilike('email',auth.user.email).order('created_at',{ascending:false}).limit(1).maybeSingle();
-  if(!reg)return NextResponse.json({message:'Pendaftaran tidak ditemukan.'},{status:404});
-  if(reg.requirements_status==='valid')return NextResponse.json({message:'Dokumen sudah dinyatakan valid dan tidak dapat diganti dari dashboard.'},{status:409});
-  let body;try{body=await request.json()}catch{return NextResponse.json({message:'Data perbaikan tidak valid.'},{status:400})}
-  const data={stra_number:clean(body.stra_number,100),participant_type:clean(body.participant_type,40),practice_type:clean(body.practice_type,100),practice_name:clean(body.practice_name),practice_years:Number(body.practice_years||0),teaching_years:Number(body.teaching_years||0)};
-  const errors=validateProfessionalData(data);if(!validStraNumber(data.stra_number))errors.stra_number='Nomor STRA wajib diisi dengan benar.';
-  const oldStra=await latestDoc(db,reg.id,'stra'),oldExp=await latestDoc(db,reg.id,'experience');
-  const straRequired=!oldStra||oldStra.status==='rejected',expRequired=!oldExp||oldExp.status==='rejected';
-  const files=body.files||{};
-  if(straRequired&&!files.stra)errors.stra='Bukti STRA perlu diunggah ulang.';
-  if(expRequired&&!files.experience)errors.experience='Bukti pengalaman perlu diunggah ulang.';
-  for(const [type,label] of [['stra','Bukti STRA'],['experience','Bukti pengalaman']]){
-    const f=files[type];if(!f)continue;if(!String(f.path||'').startsWith(`${reg.id}/${type}/`)){errors[type]='Lokasi file tidak valid.';continue}const e=await verifyStoredUpload(db,f,label);if(e)errors[type]=e;
-  }
-  if(Object.keys(errors).length)return NextResponse.json({message:Object.values(errors)[0],errors},{status:422});
-  const normalizedStra=normalizeStra(data.stra_number);const {data:duplicateStra}=await db.from('registrations').select('id').eq('event_id',reg.event_id).eq('normalized_stra',normalizedStra).neq('id',reg.id).limit(1).maybeSingle();if(duplicateStra)return NextResponse.json({message:'Nomor STRA tersebut sudah digunakan pada pendaftaran lain. Hubungi panitia jika data ini perlu dikoreksi.'},{status:409});
-  for(const type of ['stra','experience']){
-    const f=files[type];if(!f)continue;
-    const {data:old}=await db.from('registration_documents').select('storage_path').eq('registration_id',reg.id).eq('document_type',type);
-    await db.from('registration_documents').delete().eq('registration_id',reg.id).eq('document_type',type);
-    if(old?.length)await db.storage.from('preseptor-private').remove(old.map(x=>x.storage_path)).catch(()=>{});
-    const {error}=await db.from('registration_documents').insert({registration_id:reg.id,document_type:type,storage_path:f.path,original_name:f.name,mime_type:f.type,file_size:f.size,status:'pending'});if(error){console.error('requirements doc insert:',error);return NextResponse.json({message:'Gagal mencatat dokumen baru.'},{status:500})}
-  }
-  await db.from('registrations').update({...data,normalized_stra:normalizedStra,requirements_status:'pending',overall_status:overallStatus('pending',reg.payment_status),updated_at:new Date().toISOString()}).eq('id',reg.id);
-  await logActivity({registrationId:reg.id,actorType:'participant',actorEmail:auth.user.email,action:'requirements_completed'});
-  return NextResponse.json({ok:true});
+  const auth=await requireUser(request);if(auth.error)return NextResponse.json({message:auth.error},{status:auth.status});const db=getSupabaseAdmin();const {data:reg}=await db.from('registrations').select('*').ilike('email',auth.user.email).order('created_at',{ascending:false}).limit(1).maybeSingle();if(!reg)return NextResponse.json({message:'Pendaftaran tidak ditemukan.'},{status:404});if(reg.lifecycle_status==='withdrawn')return NextResponse.json({message:'Pendaftaran sudah mengundurkan diri.'},{status:409});if(reg.requirements_status==='valid')return NextResponse.json({message:'Dokumen sudah dinyatakan valid dan tidak dapat diganti dari dashboard.'},{status:409});let body;try{body=await request.json()}catch{return NextResponse.json({message:'Data perbaikan tidak valid.'},{status:400})}const data={stra_number:clean(body.stra_number,100),participant_type:clean(body.participant_type,40),practice_type:clean(body.practice_type,100),practice_name:clean(body.practice_name),practice_years:Number(body.practice_years||0),teaching_years:Number(body.teaching_years||0)};let options={};try{options=await masterOptions(db,reg.event_id,{activeOnly:false})}catch{}const errors=validateProfessionalWithMaster(data,options,{allowCurrentPracticeType:reg.practice_type||'',allowCurrentParticipantType:reg.participant_type||''});if(!validStraNumber(data.stra_number))errors.stra_number='Nomor STRA wajib diisi dengan benar.';const oldStra=await latestDoc(db,reg.id,'stra'),oldExp=await latestDoc(db,reg.id,'experience');const straRequired=!oldStra||oldStra.status==='rejected',expRequired=!oldExp||oldExp.status==='rejected';const files=body.files||{};if(straRequired&&!files.stra)errors.stra='Bukti STRA perlu diunggah ulang.';if(expRequired&&!files.experience)errors.experience='Bukti pengalaman perlu diunggah ulang.';for(const [type,label] of [['stra','Bukti STRA'],['experience','Bukti pengalaman']]){const f=files[type];if(!f)continue;if(!String(f.path||'').startsWith(`${reg.id}/${type}/`)){errors[type]='Lokasi file tidak valid.';continue}const e=await verifyStoredUpload(db,f,label);if(e)errors[type]=e}if(Object.keys(errors).length)return NextResponse.json({message:Object.values(errors)[0],errors},{status:422});const normalizedStra=normalizeStra(data.stra_number);const {data:duplicateStra}=await db.from('registrations').select('id').eq('event_id',reg.event_id).eq('normalized_stra',normalizedStra).neq('id',reg.id).limit(1).maybeSingle();if(duplicateStra)return NextResponse.json({message:'Nomor STRA tersebut sudah digunakan pada pendaftaran lain.'},{status:409});for(const type of ['stra','experience']){const f=files[type];if(!f)continue;const {data:old}=await db.from('registration_documents').select('storage_path').eq('registration_id',reg.id).eq('document_type',type);await db.from('registration_documents').delete().eq('registration_id',reg.id).eq('document_type',type);if(old?.length)await db.storage.from('preseptor-private').remove(old.map(x=>x.storage_path)).catch(()=>{});const {error}=await db.from('registration_documents').insert({registration_id:reg.id,document_type:type,storage_path:f.path,original_name:f.name,mime_type:f.type,file_size:f.size,status:'pending'});if(error)return NextResponse.json({message:'Gagal mencatat dokumen baru.'},{status:500})}await db.from('registrations').update({...data,normalized_stra:normalizedStra,requirements_status:'pending',overall_status:overallStatus('pending',reg.payment_status),updated_at:new Date().toISOString()}).eq('id',reg.id);await logActivity({registrationId:reg.id,actorType:'participant',actorEmail:auth.user.email,action:'requirements_completed'});return NextResponse.json({ok:true});
 }

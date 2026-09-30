@@ -30,8 +30,13 @@ export default function RegistrationForm(){
   const [resetKey,setResetKey]=useState(0);
   const [availability,setAvailability]=useState(null);
   const [uploadProgress,setUploadProgress]=useState('');
+  const [master,setMaster]=useState({practice_type:[],participant_type:[]});
   async function loadAvailability(){try{const r=await fetch('/api/public/settings',{cache:'no-store'});const j=await r.json();if(r.ok)setAvailability(j.availability||null)}catch{}}
-  useEffect(()=>{fetch('/api/universities').then(async r=>{if(!r.ok)throw new Error('homebase');const j=await r.json();return j.universities||[]}).then(setUniversities).catch(()=>fetch('/universities.json').then(r=>r.json()).then(setUniversities).catch(()=>setUniversities([])));loadAvailability();},[]);
+  useEffect(()=>{
+    fetch('/api/universities').then(async r=>{if(!r.ok)throw new Error('homebase');const j=await r.json();return j.universities||[]}).then(setUniversities).catch(()=>fetch('/universities.json').then(r=>r.json()).then(setUniversities).catch(()=>setUniversities([])));
+    fetch('/api/master-data').then(r=>r.ok?r.json():Promise.reject()).then(j=>setMaster(j.options||{})).catch(()=>setMaster({practice_type:[{id:'a',value:'Apotek',label:'Apotek',min_years:3,active:true},{id:'rs',value:'Rumah Sakit (RS)',label:'Rumah Sakit (RS)',min_years:3,active:true},{id:'i',value:'Industri',label:'Industri Farmasi',min_years:3,active:true},{id:'pbf',value:'PBF',label:'PBF',min_years:3,active:true},{id:'pkm',value:'Puskesmas',label:'Puskesmas',min_years:1,active:true}],participant_type:[{id:'p',value:'practitioner',label:'Praktisi',meta:{requires_practice:true}},{id:'l',value:'lecturer',label:'Dosen',meta:{requires_teaching:true}},{id:'lp',value:'lecturer_practitioner',label:'Dosen & Praktisi',meta:{requires_practice:true,requires_teaching:true}}]}));
+    loadAvailability();
+  },[]);
   const practitioner=['practitioner','lecturer_practitioner'].includes(type);
   const lecturer=['lecturer','lecturer_practitioner'].includes(type);
 
@@ -46,7 +51,7 @@ export default function RegistrationForm(){
       payment_proof:fd.get('payment_proof')
     };
     const payload={
-      full_name:fd.get('full_name'),email:fd.get('email'),whatsapp:fd.get('whatsapp'),university:fd.get('university'),
+      name_core:fd.get('name_core'),title_prefix:fd.get('title_prefix'),title_suffix:fd.get('title_suffix'),email:fd.get('email'),whatsapp:fd.get('whatsapp'),university:fd.get('university'),
       participant_type:fd.get('participant_type'),stra_number:fd.get('stra_number'),practice_type:fd.get('practice_type'),practice_name:fd.get('practice_name'),practice_years:fd.get('practice_years'),teaching_years:fd.get('teaching_years'),attendance_mode:fd.get('attendance_mode'),confirm_data:fd.get('confirm_data'),website:fd.get('website'),
       files:{stra:fileMeta(files.stra),experience:fileMeta(files.experience),payment_proof:fileMeta(files.payment_proof)}
     };
@@ -86,7 +91,9 @@ export default function RegistrationForm(){
       <section className="form-section-card" id="identitas">
         <div className="form-section-heading"><span className="section-number">01</span><div><div className="eyebrow brand-blue">Data Peserta</div><h2>Identitas utama</h2><p>Gunakan email dan WhatsApp aktif. Data ini juga membantu sistem mencegah pendaftaran ganda.</p></div></div>
         <div className="grid grid-2">
-          <div className="field"><label>Nama lengkap beserta gelar <b>*</b></label><input name="full_name" required maxLength="255" placeholder="Contoh: apt. Ahmad Fauzan, M.Farm." /></div>
+          <div className="field"><label>Gelar depan</label><input name="title_prefix" maxLength="80" placeholder="Contoh: apt." /></div>
+          <div className="field"><label>Nama lengkap <b>*</b></label><input name="name_core" required maxLength="255" placeholder="Contoh: Ahmad Fauzan" /><small>Tulis nama tanpa gelar agar format dokumen lebih rapi.</small></div>
+          <div className="field"><label>Gelar belakang</label><input name="title_suffix" maxLength="120" placeholder="Contoh: S.Farm., M.Farm." /></div>
           <div className="field"><label>Email aktif <b>*</b></label><input name="email" type="email" required placeholder="nama@email.com"/><small>Dipakai untuk login dan seluruh notifikasi pendaftaran.</small></div>
           <div className="field"><label>Nomor WhatsApp <b>*</b></label><input name="whatsapp" inputMode="tel" required placeholder="08xxxxxxxxxx"/></div>
           <div className="field"><label>Homebase perguruan tinggi <b>*</b></label><UniversityCombobox name="university" universities={universities} required/><small>Ketik nama kampus lalu pilih dari daftar yang muncul.</small></div>
@@ -96,9 +103,9 @@ export default function RegistrationForm(){
       <section className="form-section-card" id="profesi">
         <div className="form-section-heading"><span className="section-number">02</span><div><div className="eyebrow brand-blue">Kelayakan Peserta</div><h2>Profesi, pengalaman, dan STRA</h2><p>Pilih kategori yang paling menggambarkan aktivitas profesional Anda saat ini.</p></div></div>
         <div className="eligibility-banner"><span>✓</span><div><strong>Syarat singkat</strong><p>Memiliki STRA; praktisi memenuhi masa praktik sesuai fasilitas; atau dosen telah mengajar minimal 2 tahun.</p></div></div>
-        <div className="field"><label>Kategori peserta <b>*</b></label><div className="choice-input-grid three"><ChoiceCard name="participant_type" value="practitioner" checked={type==='practitioner'} onChange={e=>setType(e.target.value)} title="Praktisi" description="Apotek, RS, industri, PBF, atau puskesmas"/><ChoiceCard name="participant_type" value="lecturer" checked={type==='lecturer'} onChange={e=>setType(e.target.value)} title="Dosen" description="Pengalaman mengajar minimal 2 tahun"/><ChoiceCard name="participant_type" value="lecturer_practitioner" checked={type==='lecturer_practitioner'} onChange={e=>setType(e.target.value)} title="Dosen & Praktisi" description="Memiliki dua aktivitas profesional"/></div></div>
+        <div className="field"><label>Kategori peserta <b>*</b></label><div className="choice-input-grid three">{(master.participant_type||[]).filter(x=>x.active!==false).map(x=><ChoiceCard key={x.id||x.value} name="participant_type" value={x.value} checked={type===x.value} onChange={e=>setType(e.target.value)} title={x.label} description={x.meta?.requires_practice&&x.meta?.requires_teaching?'Memiliki aktivitas mengajar dan praktik':x.meta?.requires_practice?'Praktisi pada fasilitas kefarmasian':'Pengalaman mengajar sesuai ketentuan'}/>)}</div></div>
         <div className="field"><label>Nomor STRA <b>*</b></label><input name="stra_number" required maxLength="100" placeholder="Masukkan nomor STRA sesuai dokumen"/><small>Nomor STRA digunakan sebagai salah satu identitas unik untuk mencegah pendaftaran ganda.</small></div>
-        {practitioner&&<div className="grid grid-3 conditional-fields"><div className="field"><label>Jenis tempat praktik <b>*</b></label><select name="practice_type" required><option value="">Pilih tempat praktik</option><option>Apotek</option><option>Rumah Sakit (RS)</option><option>Industri</option><option>PBF</option><option>Puskesmas</option></select></div><div className="field"><label>Nama tempat praktik <b>*</b></label><input name="practice_name" required placeholder="Nama fasilitas / perusahaan"/></div><div className="field"><label>Lama praktik <b>*</b></label><div className="input-suffix"><input name="practice_years" type="number" min="0" step="0.5" required placeholder="3"/><span>tahun</span></div></div></div>}
+        {practitioner&&<div className="grid grid-3 conditional-fields"><div className="field"><label>Jenis tempat praktik <b>*</b></label><select name="practice_type" required><option value="">Pilih tempat praktik</option>{(master.practice_type||[]).filter(x=>x.active!==false).map(x=><option key={x.id||x.value} value={x.value}>{x.label}{x.min_years?` · min ${Number(x.min_years)} th`:''}</option>)}</select></div><div className="field"><label>Nama tempat praktik <b>*</b></label><input name="practice_name" required placeholder="Nama fasilitas / perusahaan"/></div><div className="field"><label>Lama praktik <b>*</b></label><div className="input-suffix"><input name="practice_years" type="number" min="0" step="0.5" required placeholder="3"/><span>tahun</span></div></div></div>}
         {lecturer&&<div className="field conditional-fields"><label>Lama mengajar sebagai dosen <b>*</b></label><div className="input-suffix compact"><input name="teaching_years" type="number" min="0" step="0.5" required placeholder="2"/><span>tahun</span></div></div>}
       </section>
 

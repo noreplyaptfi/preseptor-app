@@ -1,110 +1,30 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '../../../../../lib/auth';
 import { getSupabaseAdmin } from '../../../../../lib/supabase-admin';
-import { clean,validEmail,validStraNumber,allowedModes } from '../../../../../lib/validation';
 import { normalizeEmail,normalizePhone,normalizeStra } from '../../../../../lib/normalization';
+import { validEmail,validStraNumber } from '../../../../../lib/validation';
+import { masterOptions,validateProfessionalWithMaster } from '../../../../../lib/master-data';
+import { cleanText,displayName } from '../../../../../lib/profile';
 import { overallStatus } from '../../../../../lib/status';
 import { logActivity } from '../../../../../lib/audit';
+export const dynamic='force-dynamic';
 
-const roles=['super_admin','event_admin'];
-const participantTypes=['practitioner','lecturer','lecturer_practitioner'];
-const sensitiveStra=['stra_number'];
-const sensitiveExperience=['participant_type','practice_type','practice_name','practice_years','teaching_years'];
-function latestByType(docs=[]){const out={};for(const d of docs){if(!out[d.document_type])out[d.document_type]=d}return out}
-function changed(a,b){return String(a??'')!==String(b??'')}
+async function ctx(request){const auth=await requireAdmin(request,['super_admin','event_admin']);if(auth.error)return {response:NextResponse.json({message:auth.error},{status:auth.status})};return {auth,db:getSupabaseAdmin()}}
+
+export async function GET(request,{params}){const c=await ctx(request);if(c.response)return c.response;const {id}=await params;const {data,error}=await c.db.from('registrations').select('*').eq('id',id).maybeSingle();if(error||!data)return NextResponse.json({message:'Peserta tidak ditemukan.'},{status:404});return NextResponse.json({registration:data})}
 
 export async function PATCH(request,{params}){
-  const auth=await requireAdmin(request,roles);
-  if(auth.error) return NextResponse.json({message:auth.error},{status:auth.status});
-  const {id}=await params;
-  const db=getSupabaseAdmin();
-  const {data:reg,error:regError}=await db.from('registrations').select('*').eq('id',id).single();
-  if(regError||!reg) return NextResponse.json({message:'Pendaftar tidak ditemukan.'},{status:404});
-  const body=await request.json();
-  const patch={
-    full_name:clean(body.full_name,255),
-    email:normalizeEmail(clean(body.email,190)),
-    whatsapp:clean(body.whatsapp,50),
-    university:clean(body.university,255),
-    attendance_mode:clean(body.attendance_mode,20),
-    participant_type:clean(body.participant_type,40)||null,
-    practice_type:clean(body.practice_type,100)||null,
-    practice_name:clean(body.practice_name,255)||null,
-    practice_years:Number(body.practice_years||0),
-    teaching_years:Number(body.teaching_years||0),
-    stra_number:clean(body.stra_number,100)||null
-  };
-  if(patch.full_name.length<3) return NextResponse.json({message:'Nama peserta wajib diisi.'},{status:422});
-  if(!validEmail(patch.email)) return NextResponse.json({message:'Email tidak valid.'},{status:422});
-  patch.normalized_email=changed(reg.email,patch.email)?normalizeEmail(patch.email):reg.normalized_email;
-  patch.normalized_whatsapp=changed(reg.whatsapp,patch.whatsapp)?normalizePhone(patch.whatsapp):reg.normalized_whatsapp;
-  patch.normalized_stra=changed(reg.stra_number,patch.stra_number)?(patch.stra_number?normalizeStra(patch.stra_number):null):reg.normalized_stra;
-  if(patch.normalized_whatsapp.length<10) return NextResponse.json({message:'Nomor WhatsApp tidak valid.'},{status:422});
-  if(patch.stra_number&&!validStraNumber(patch.stra_number)) return NextResponse.json({message:'Nomor STRA tidak valid.'},{status:422});
-  if(!patch.university) return NextResponse.json({message:'Homebase wajib diisi.'},{status:422});
-  if(!allowedModes.includes(patch.attendance_mode)) return NextResponse.json({message:'Mode keikutsertaan tidak valid.'},{status:422});
-  if(patch.participant_type!==null&&!participantTypes.includes(patch.participant_type)) return NextResponse.json({message:'Kategori peserta tidak valid.'},{status:422});
-
-  if(patch.attendance_mode!==reg.attendance_mode){
-    const {data:event}=await db.from('events').select('quota_online,quota_offline').eq('id',reg.event_id).single();
-    const {count}=await db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',reg.event_id).eq('attendance_mode',patch.attendance_mode).neq('id',reg.id);
-    const quota=patch.attendance_mode==='Offline'?Number(event?.quota_offline||50):Number(event?.quota_online||150);
-    if(quota>0&&Number(count||0)>=quota) return NextResponse.json({message:`Kuota ${patch.attendance_mode} sudah penuh.`},{status:409});
-  }
-
-  const fieldNames=Object.keys(patch).filter(k=>!k.startsWith('normalized_'));
-  const changedFields=fieldNames.filter(k=>changed(reg[k],patch[k]));
-  if(!changedFields.length) return NextResponse.json({ok:true,noChanges:true});
-  patch.updated_at=new Date().toISOString();
-  if(changed(reg.email,patch.email)){patch.email_needs_update=false;patch.legacy_contact_email=reg.legacy_contact_email||reg.email}
-
-  let authUser=null;
-  if(changed(reg.email,patch.email)){
-    try{const {data:list}=await db.auth.admin.listUsers({page:1,perPage:1000});authUser=(list?.users||[]).find(u=>String(u.email||'').toLowerCase()===String(reg.email||'').toLowerCase())||null}catch(e){console.error('lookup participant auth user:',e)}
-  }
-
-  const {error:updateError}=await db.from('registrations').update(patch).eq('id',reg.id);
-  if(updateError){
-    if(updateError.code==='23505') return NextResponse.json({message:'Email, WhatsApp, atau nomor STRA sudah digunakan pendaftar lain.'},{status:409});
-    if(String(updateError.message||'').includes('quota_online_full')) return NextResponse.json({message:'Kuota Online sudah penuh.'},{status:409});
-    if(String(updateError.message||'').includes('quota_offline_full')) return NextResponse.json({message:'Kuota Offline sudah penuh.'},{status:409});
-    console.error('admin participant registration update:',updateError);
-    return NextResponse.json({message:'Gagal memperbarui data peserta.',...(process.env.NODE_ENV!=='production'?{detail:updateError.message,code:updateError.code}: {})},{status:500});
-  }
-
-  if(authUser&&changed(reg.email,patch.email)){
-    try{
-      const {error:authError}=await db.auth.admin.updateUserById(authUser.id,{email:patch.email,email_confirm:true});
-      if(authError) throw authError;
-    }catch(e){
-      const rollback={};
-      for(const key of Object.keys(patch)){if(key!=='updated_at')rollback[key]=reg[key]??null}
-      rollback.updated_at=new Date().toISOString();
-      await db.from('registrations').update(rollback).eq('id',reg.id);
-      console.error('admin participant auth email update:',e);
-      return NextResponse.json({message:'Email akun peserta gagal diperbarui. Perubahan dibatalkan; silakan coba lagi.'},{status:500});
-    }
-  }
-
-  const {data:docsData}=await db.from('registration_documents').select('*').eq('registration_id',reg.id).order('created_at',{ascending:false});
-  const docs=latestByType(docsData||[]);
-  const now=new Date().toISOString();
-  const resetTypes=[];
-  if(sensitiveStra.some(k=>changedFields.includes(k))&&docs.stra) resetTypes.push('stra');
-  if(sensitiveExperience.some(k=>changedFields.includes(k))&&docs.experience) resetTypes.push('experience');
-  for(const type of resetTypes){
-    const doc=docs[type];
-    await db.from('registration_documents').update({status:'pending',review_note:null,next_action:null,reviewed_at:null,reviewed_by:null}).eq('id',doc.id);
-    docs[type]={...doc,status:'pending'};
-  }
-  const reqDocs=[docs.stra,docs.experience];
-  let requirementsStatus='pending';
-  if(reqDocs.some(x=>!x)) requirementsStatus='incomplete';
-  else if(reqDocs.some(x=>x.status==='rejected')) requirementsStatus='rejected';
-  else if(reqDocs.every(x=>x.status==='valid')) requirementsStatus='valid';
-  const paymentStatus=!docs.payment_proof?'pending':docs.payment_proof.status==='valid'?'verified':docs.payment_proof.status==='rejected'?'rejected':'pending';
-  await db.from('registrations').update({requirements_status:requirementsStatus,payment_status:paymentStatus,overall_status:overallStatus(requirementsStatus,paymentStatus),requirements_verified_at:requirementsStatus==='valid'?reg.requirements_verified_at:null,requirements_verified_by:requirementsStatus==='valid'?reg.requirements_verified_by:null,updated_at:now}).eq('id',reg.id);
-
-  await logActivity({registrationId:reg.id,actorType:'admin',actorEmail:auth.user.email,action:'participant_profile_updated',metadata:{changed_fields:changedFields,review_reset:resetTypes}});
-  return NextResponse.json({ok:true,changedFields,reviewReset:resetTypes});
+  const c=await ctx(request);if(c.response)return c.response;const {id}=await params;const {data:reg}=await c.db.from('registrations').select('*').eq('id',id).maybeSingle();if(!reg)return NextResponse.json({message:'Peserta tidak ditemukan.'},{status:404});const b=await request.json().catch(()=>({}));
+  const participantType=cleanText(b.participant_type,40)||null,practiceType=cleanText(b.practice_type,120)||null,practiceName=cleanText(b.practice_name,255)||null,stra=cleanText(b.stra_number,100)||null;
+  const nameCore=cleanText(b.name_core||b.full_name||reg.name_core||reg.full_name,255),titlePrefix=cleanText(b.title_prefix??reg.title_prefix,80),titleSuffix=cleanText(b.title_suffix??reg.title_suffix,120),email=normalizeEmail(cleanText(b.email||reg.email,190)),whatsapp=cleanText(b.whatsapp||reg.whatsapp,50),university=cleanText(b.university||reg.university,255),mode=cleanText(b.attendance_mode||reg.attendance_mode,20);
+  const data={name_core:nameCore,title_prefix:titlePrefix,title_suffix:titleSuffix,full_name:displayName({name_core:nameCore,title_prefix:titlePrefix,title_suffix:titleSuffix,full_name:reg.full_name}),email,whatsapp,university,attendance_mode:mode,participant_type:participantType,practice_type:practiceType,practice_name:practiceName,practice_years:Number(b.practice_years||0),teaching_years:Number(b.teaching_years||0),stra_number:stra};
+  const errors={};if(nameCore.length<3)errors.name_core='Nama wajib diisi.';if(!validEmail(email))errors.email='Email tidak valid.';const normWa=normalizePhone(whatsapp);if(normWa.length<10)errors.whatsapp='Nomor WhatsApp tidak valid.';if(!['Online','Offline'].includes(mode))errors.attendance_mode='Mode keikutsertaan tidak valid.';if(stra&&!validStraNumber(stra))errors.stra_number='Nomor STRA tidak valid.';
+  if(participantType){let options={};try{options=await masterOptions(c.db,reg.event_id,{activeOnly:false})}catch{}Object.assign(errors,validateProfessionalWithMaster(data,options,{allowCurrentPracticeType:reg.practice_type||'',allowCurrentParticipantType:reg.participant_type||''}))}
+  const [{data:dupEmail},{data:dupWa},{data:dupStra}]=await Promise.all([c.db.from('registrations').select('id').eq('event_id',reg.event_id).eq('normalized_email',email).neq('id',reg.id).limit(1).maybeSingle(),c.db.from('registrations').select('id').eq('event_id',reg.event_id).eq('normalized_whatsapp',normWa).neq('id',reg.id).limit(1).maybeSingle(),stra?c.db.from('registrations').select('id').eq('event_id',reg.event_id).eq('normalized_stra',normalizeStra(stra)).neq('id',reg.id).limit(1).maybeSingle():Promise.resolve({data:null})]);if(dupEmail)errors.email='Email sudah digunakan peserta lain.';if(dupWa)errors.whatsapp='WhatsApp sudah digunakan peserta lain.';if(dupStra)errors.stra_number='STRA sudah digunakan peserta lain.';if(Object.keys(errors).length)return NextResponse.json({message:Object.values(errors)[0],errors},{status:422});
+  const {data:uni}=await c.db.from('universities').select('name,active').ilike('name',university).limit(1).maybeSingle();if(!uni&&university!==reg.university)return NextResponse.json({message:'Homebase harus dipilih dari Data Homebase.'},{status:422});
+  if(mode!==reg.attendance_mode&&reg.lifecycle_status!=='withdrawn'){const {data:event}=await c.db.from('events').select('quota_online,quota_offline').eq('id',reg.event_id).single();const {count}=await c.db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',reg.event_id).neq('lifecycle_status','withdrawn').eq('attendance_mode',mode);const quota=mode==='Offline'?Number(event?.quota_offline||0):Number(event?.quota_online||0);if(quota>0&&Number(count||0)>=quota)return NextResponse.json({message:`Kuota ${mode} sudah penuh.`},{status:409})}
+  const straChanged=normalizeStra(stra||'')!==normalizeStra(reg.stra_number||''),experienceChanged=['participant_type','practice_type','practice_name'].some(k=>String(data[k]||'')!==String(reg[k]||''))||Number(data.practice_years)!==Number(reg.practice_years||0)||Number(data.teaching_years)!==Number(reg.teaching_years||0),emailChanged=email!==normalizeEmail(reg.email);
+  let authUser=null;if(emailChanged){const users=await c.db.auth.admin.listUsers({page:1,perPage:1000});authUser=users.data?.users?.find(u=>String(u.email||'').toLowerCase()===String(reg.email||'').toLowerCase());if(!authUser)return NextResponse.json({message:'Akun login peserta tidak ditemukan sehingga email tidak diubah.'},{status:409});const a=await c.db.auth.admin.updateUserById(authUser.id,{email,email_confirm:true});if(a.error)return NextResponse.json({message:`Gagal memperbarui email login: ${a.error.message}`},{status:500})}
+  const update={...data,participant_type:participantType,practice_type:practiceType,practice_name:practiceName,stra_number:stra,normalized_email:email,normalized_whatsapp:normWa,normalized_stra:stra?normalizeStra(stra):null,email_needs_update:false,updated_at:new Date().toISOString()};const reset=[];if(straChanged||experienceChanged){update.requirements_status='pending';update.overall_status=overallStatus('pending',reg.payment_status)}const {error}=await c.db.from('registrations').update(update).eq('id',reg.id);if(error){console.error('admin participant update:',error);if(emailChanged&&authUser)await c.db.auth.admin.updateUserById(authUser.id,{email:reg.email,email_confirm:true}).catch(()=>{});return NextResponse.json({message:process.env.NODE_ENV==='development'?`Database: ${error.message} (${error.code||'no-code'})`:'Gagal memperbarui data peserta.'},{status:500})}
+  if(straChanged){const {data:docs}=await c.db.from('registration_documents').select('id').eq('registration_id',reg.id).eq('document_type','stra').order('created_at',{ascending:false}).limit(1);if(docs?.[0]){await c.db.from('registration_documents').update({status:'pending',review_note:null,next_action:null,reviewed_at:null,reviewed_by:null}).eq('id',docs[0].id);reset.push('stra')}}if(experienceChanged){const {data:docs}=await c.db.from('registration_documents').select('id').eq('registration_id',reg.id).eq('document_type','experience').order('created_at',{ascending:false}).limit(1);if(docs?.[0]){await c.db.from('registration_documents').update({status:'pending',review_note:null,next_action:null,reviewed_at:null,reviewed_by:null}).eq('id',docs[0].id);reset.push('experience')}}await logActivity({registrationId:reg.id,actorType:'admin',actorEmail:c.auth.user.email,action:'participant_updated'});return NextResponse.json({ok:true,reviewReset:reset,noChanges:false});
 }
