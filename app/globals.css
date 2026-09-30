@@ -135,3 +135,205 @@ h1,h2,h3,h4,.brand,.btn,.status,.eyebrow{font-family:var(--font-lato),Lato,Arial
 .refund-admin{display:grid;gap:18px}.refund-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.refund-stats article{background:#fff;border:1px solid #dce5f1;border-radius:16px;padding:15px;display:grid;gap:3px}.refund-stats span,.refund-stats small{color:#6f7a95;font-size:.8rem}.refund-stats strong{font-size:1.55rem;color:#11185d}.refund-toolbar{display:flex;gap:8px;align-items:center}.refund-table-wrap{overflow:auto}.refund-table{width:100%;border-collapse:collapse;font-size:.84rem}.refund-table th,.refund-table td{padding:10px 8px;border-bottom:1px solid #e5eaf2;text-align:left;vertical-align:top}.refund-table th{font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;color:#65718c}.refund-table td>strong,.refund-table td>small{display:block}.refund-table small{color:#73809a;line-height:1.5}.refund-table details{margin-top:5px;font-size:.75rem}.refund-table summary{cursor:pointer;color:#3157a8}.refund-row-actions{display:flex;gap:5px;flex-wrap:wrap}.refund-batches{display:grid;gap:8px}.refund-batches article{display:flex;align-items:center;gap:8px;border:1px solid #e0e7f1;border-radius:12px;padding:11px}.refund-batches article>div:first-child{display:grid;gap:2px;margin-right:auto}.refund-batches small{color:#75809a}
 @media(max-width:960px){.profile-grid{grid-template-columns:1fr 1fr}.self-service-two-col,.request-admin-layout,.master-data-layout{grid-template-columns:1fr}.refund-bank-grid{grid-template-columns:1fr 1fr}.refund-stats{grid-template-columns:1fr 1fr}}
 @media(max-width:640px){.profile-grid,.self-service-two-col,.refund-bank-grid,.refund-stats{grid-template-columns:1fr}.profile-grid .span-2{grid-column:auto}.request-history-list article,.request-admin-row,.master-data-rows article,.refund-batches article{flex-direction:column;align-items:stretch}.request-admin-actions{align-items:stretch}.refund-toolbar{align-items:stretch;flex-direction:column}.refund-toolbar>*{width:100%}}
+
+/* v0.4.10 — UI/UX polish for participant self-service, requests and refund */
+.admin-logo .admin-logo-mark{display:none}
+.sidebar-collapsed .admin-logo .admin-logo-mark{display:grid}
+
+.ui-select,.field select,.admin-filters select{
+  appearance:none;-webkit-appearance:none;
+  min-height:44px;
+  padding:11px 42px 11px 13px!important;
+  border:1px solid #cbd8eb!important;
+  border-radius:12px!important;
+  background-color:#fff!important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5.5 7.5L10 12l4.5-4.5' stroke='%235b6b8b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important;
+  background-repeat:no-repeat!important;
+  background-position:right 13px center!important;
+  background-size:16px 16px!important;
+  color:var(--text);
+  line-height:1.25;
+  cursor:pointer;
+}
+.ui-select:hover,.field select:hover,.admin-filters select:hover{border-color:#9fb5d8!important}
+.ui-select:focus,.field select:focus,.admin-filters select:focus{outline:none;border-color:#5e8fe8!important;box-shadow:0 0 0 4px rgba(24,87,232,.09)!important}
+.ui-select:disabled,.field select:disabled,.admin-filters select:disabled{cursor:not-allowed;background-color:#f3f6fa!important;color:#8a96aa;opacity:1}
+.compact-select{min-width:168px;width:auto}
+
+.ui-checkbox,.agreement input[type="checkbox"],.refund-table input[type="checkbox"]{
+  appearance:none;-webkit-appearance:none;
+  width:20px;height:20px;min-width:20px;
+  margin:0;
+  border:1.5px solid #aebbd0;
+  border-radius:6px;
+  background:#fff;
+  cursor:pointer;
+  transition:border-color .15s,background-color .15s,box-shadow .15s;
+}
+.ui-checkbox:hover,.agreement input[type="checkbox"]:hover,.refund-table input[type="checkbox"]:hover{border-color:#5f8ee6}
+.ui-checkbox:focus-visible,.agreement input[type="checkbox"]:focus-visible,.refund-table input[type="checkbox"]:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(24,87,232,.12)}
+.ui-checkbox:checked,.agreement input[type="checkbox"]:checked,.refund-table input[type="checkbox"]:checked{
+  border-color:#1857e8;
+  background-color:#1857e8;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M3 7.2l2.3 2.3L11 4.2' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:center;background-size:14px 14px;
+}
+.ui-checkbox:disabled,.agreement input[type="checkbox"]:disabled,.refund-table input[type="checkbox"]:disabled{cursor:not-allowed;opacity:.45;background-color:#edf1f6}
+
+.empty-state.compact{padding:28px 16px}
+.empty-state.compact h3{font-size:16px;margin:0 0 5px}
+.empty-state.compact p{font-size:12px}
+
+.request-admin-list .panel-head,.refund-list-panel .panel-head{align-items:center}
+.request-admin-list .panel-head>div:first-child,.refund-list-panel .panel-head>div:first-child{min-width:0}
+.request-admin-list .panel-head .ui-select{flex:0 0 auto}
+.request-admin-create{padding:22px}
+.request-admin-create .agreement{margin:3px 0 16px}
+.request-create-submit{min-width:160px}
+.request-admin-row{padding:16px}
+.request-admin-actions .btn{min-width:82px}
+
+.refund-choice-card{
+  cursor:pointer;
+  align-items:center;
+  min-height:58px;
+  background:#f8fbff;
+  border-color:#d9e4f4;
+  transition:border-color .15s,background .15s,box-shadow .15s;
+}
+.refund-choice-card:hover{border-color:#a8c1ef;background:#f4f8ff}
+.refund-choice-card:has(input:checked){border-color:#8eb0ee;background:#eef4ff;box-shadow:0 0 0 3px rgba(24,87,232,.05)}
+.refund-choice-card span{font-weight:700;color:#263557}
+
+.refund-bank-grid{
+  grid-template-columns:minmax(140px,.75fr) minmax(190px,1fr) minmax(260px,1.45fr);
+  gap:14px;
+  align-items:start;
+}
+.refund-bank-grid .field{min-width:0;margin-bottom:0}
+.refund-bank-grid .field input{min-height:48px}
+.refund-estimate{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:3px 18px;
+  align-items:center;
+  padding:14px 16px;
+}
+.refund-estimate small{grid-column:1}
+.refund-estimate strong{grid-column:2;grid-row:1/3;font-size:1.15rem}
+.refund-estimate span{grid-column:1;font-size:.78rem}
+
+.refund-toolbar{min-height:44px}
+.refund-toolbar .ui-select{min-width:168px}
+.refund-toolbar .btn{min-height:44px;white-space:nowrap}
+.refund-table input[type="checkbox"]{width:18px;height:18px;min-width:18px;vertical-align:middle}
+
+.profile-name-grid{
+  grid-template-columns:minmax(140px,.62fr) minmax(280px,1.75fr) minmax(180px,.9fr);
+}
+.profile-name-grid .profile-name-core{grid-column:auto}
+.profile-name-grid .profile-homebase{grid-column:2/4}
+.profile-name-grid .field{min-width:0}
+.profile-name-grid .field input{min-height:48px}
+.profile-name-grid .profile-title-prefix input,.profile-name-grid .profile-title-suffix input{background:#fbfcff}
+.profile-professional-grid .field{min-width:0}
+.profile-professional-grid input,.profile-professional-grid select{min-height:48px}
+
+.request-history-list article{padding:15px 16px}
+.request-history-actions{min-width:132px}
+.request-cancel-button{min-width:90px;background:#fff7f5}
+.request-cancel-button:hover{background:#fff0ed}
+.text-link{appearance:none;border:0;background:transparent;padding:0;font:inherit;cursor:pointer}
+
+@media(max-width:1100px){
+  .profile-name-grid{grid-template-columns:minmax(130px,.72fr) minmax(260px,1.6fr)}
+  .profile-name-grid .profile-title-suffix{grid-column:1}
+  .profile-name-grid .profile-whatsapp{grid-column:2}
+  .profile-name-grid .profile-homebase{grid-column:1/-1}
+  .refund-bank-grid{grid-template-columns:1fr 1fr}
+  .refund-bank-grid .field:nth-child(3){grid-column:1/-1}
+}
+@media(max-width:960px){
+  .request-admin-list .panel-head,.refund-list-panel .panel-head{align-items:flex-start}
+}
+@media(max-width:640px){
+  .profile-name-grid{grid-template-columns:1fr}
+  .profile-name-grid .profile-title-suffix,.profile-name-grid .profile-whatsapp,.profile-name-grid .profile-homebase{grid-column:auto}
+  .refund-bank-grid{grid-template-columns:1fr}
+  .refund-bank-grid .field:nth-child(3),.refund-estimate{grid-column:auto}
+  .refund-estimate{display:flex;flex-direction:column;align-items:flex-start}
+  .request-admin-list .panel-head,.refund-list-panel .panel-head{display:grid}
+  .request-admin-list .panel-head .ui-select,.refund-toolbar .ui-select{width:100%;min-width:0}
+  .request-history-actions{min-width:0;align-items:stretch;width:100%}
+}
+
+/* v0.4.11 — self-service / refund UX hardening */
+.action-dialog-backdrop{z-index:220}
+.action-dialog{width:min(560px,calc(100vw - 28px));max-height:min(88vh,760px);overflow:auto;padding:26px}
+.confirm-symbol.info{background:#eef4ff;color:#1857e8}
+.action-dialog-content{display:grid;gap:14px;margin-top:16px}
+.action-dialog-actions{position:sticky;bottom:-26px;margin-left:-26px;margin-right:-26px;margin-bottom:-26px;padding:16px 26px 26px;background:linear-gradient(180deg,rgba(255,255,255,.88),#fff 34%);border-top:1px solid #edf1f7}
+.dialog-summary{display:grid;gap:0;border:1px solid #dde6f2;border-radius:14px;background:#f8fbff;overflow:hidden}
+.dialog-summary>div{display:grid;grid-template-columns:minmax(120px,.72fr) minmax(0,1.28fr);gap:14px;padding:11px 13px;border-bottom:1px solid #e6edf7;align-items:start}
+.dialog-summary>div:last-child{border-bottom:0}
+.dialog-summary span{color:#71809d;font-size:.78rem}
+.dialog-summary strong{color:#17214f;font-size:.86rem;word-break:break-word}
+.dialog-request-summary{display:grid;gap:5px;padding:13px 14px;border:1px solid #dde6f2;border-radius:14px;background:#f8fbff}
+.dialog-request-summary strong{color:#11185d}.dialog-request-summary span{font-size:.78rem;color:#607091}.dialog-request-summary p{margin:4px 0 0;color:#4f5f7c;font-size:.84rem;line-height:1.55}
+.dialog-field{margin:0}.dialog-field input,.dialog-field textarea{width:100%;max-width:100%;box-sizing:border-box}
+.dialog-refund-form{display:grid;gap:13px}
+.dialog-refund-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;min-width:0}
+.dialog-refund-grid .field{min-width:0;margin:0}.dialog-refund-grid .dialog-wide{grid-column:1/-1}
+.dialog-refund-grid input,.dialog-refund-grid textarea{width:100%;max-width:100%;box-sizing:border-box}
+
+.profile-self-service,.profile-self-service>*,.profile-form-card,.self-service-card,.danger-zone-card,.request-history-card,.withdrawal-form,.request-admin-layout,.request-admin-layout>*,.refund-admin,.refund-admin>*,.refund-list-panel,.refund-batch-panel{min-width:0;max-width:100%}
+.profile-self-service{overflow:hidden}
+.profile-grid,.refund-bank-grid,.self-service-two-col{width:100%;max-width:100%}
+.profile-grid .field,.refund-bank-grid .field,.request-box,.request-admin-create .field{min-width:0}
+.profile-grid input,.profile-grid select,.profile-grid textarea,.refund-bank-grid input,.refund-bank-grid select,.refund-bank-grid textarea,.request-admin-create input,.request-admin-create select,.request-admin-create textarea{width:100%;max-width:100%;box-sizing:border-box}
+
+.profile-name-grid{grid-template-columns:minmax(0,.72fr) minmax(0,1.65fr) minmax(0,.9fr)}
+.profile-name-grid .profile-name-core{grid-column:auto}
+.profile-name-grid .profile-homebase{grid-column:2/-1}
+.profile-professional-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+.refund-bank-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.refund-bank-grid .account-holder-field,.refund-bank-grid .refund-note-field,.refund-bank-grid .refund-estimate{grid-column:1/-1}
+.refund-bank-grid .field:nth-child(3){grid-column:1/-1}
+.refund-bank-grid .field input{min-width:0}
+.withdrawal-form>.btn{margin-top:16px}
+
+.request-admin-layout{grid-template-columns:minmax(0,1.55fr) minmax(300px,.78fr)}
+.request-admin-feedback{grid-column:1/-1}
+.request-admin-create{overflow:hidden}
+.request-admin-create .refund-bank-grid{grid-template-columns:1fr}
+.request-admin-create .refund-bank-grid .field{grid-column:auto}
+.request-admin-create .request-create-submit{width:100%;justify-content:center}
+.request-admin-row{min-width:0}.request-admin-main{overflow-wrap:anywhere}
+
+.refund-toolbar{flex-wrap:wrap;justify-content:flex-end}.refund-toolbar .ui-select{min-width:176px}.refund-table-wrap{max-width:100%;overscroll-behavior-x:contain}
+.refund-batches article{min-width:0}.refund-batches article>div:first-child{min-width:0}.refund-batches small{overflow-wrap:anywhere}
+
+@media(max-width:1100px){
+  .profile-name-grid{grid-template-columns:minmax(0,.8fr) minmax(0,1.5fr)}
+  .profile-name-grid .profile-title-suffix{grid-column:1}.profile-name-grid .profile-whatsapp{grid-column:2}.profile-name-grid .profile-homebase{grid-column:1/-1}
+  .profile-professional-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .request-admin-layout{grid-template-columns:1fr}
+  .request-admin-create{max-width:none}
+}
+@media(max-width:760px){
+  .action-dialog{padding:21px;width:calc(100vw - 16px);border-radius:18px}
+  .action-dialog-actions{bottom:-21px;margin-left:-21px;margin-right:-21px;margin-bottom:-21px;padding:14px 21px 21px}
+  .dialog-summary>div{grid-template-columns:1fr;gap:3px}
+  .dialog-refund-grid{grid-template-columns:1fr}.dialog-refund-grid .dialog-wide{grid-column:auto}
+  .profile-name-grid,.profile-professional-grid,.refund-bank-grid,.self-service-two-col{grid-template-columns:1fr}
+  .profile-name-grid .profile-title-suffix,.profile-name-grid .profile-whatsapp,.profile-name-grid .profile-homebase,.refund-bank-grid .account-holder-field,.refund-bank-grid .refund-note-field,.refund-bank-grid .refund-estimate,.refund-bank-grid .field:nth-child(3){grid-column:auto}
+  .profile-actions .btn,.withdrawal-form>.btn{width:100%;justify-content:center}
+  .request-admin-row{flex-direction:column;align-items:stretch}.request-admin-actions{align-items:stretch}.request-admin-actions .btn{width:100%}
+  .refund-toolbar{display:grid;grid-template-columns:1fr}.refund-toolbar .ui-select,.refund-toolbar .btn{width:100%;min-width:0}
+}
+@media(max-width:520px){
+  .confirm-actions.action-dialog-actions{grid-template-columns:1fr}.confirm-actions.action-dialog-actions .btn{width:100%;justify-content:center}
+  .request-history-list article{padding:14px}.request-history-actions{width:100%;align-items:stretch}.request-history-actions .btn{width:100%}
+}
