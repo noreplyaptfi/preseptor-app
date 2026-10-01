@@ -9,7 +9,7 @@ const statuses={pending:'Menunggu',approved:'Disetujui',rejected:'Ditolak',cance
 function dt(v){return v?new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Jakarta'}).format(new Date(v)):'—'}
 function maskAccount(v){const s=String(v||'').replace(/\s+/g,'');return s.length>4?`•••• ${s.slice(-4)}`:s||'—'}
 
-export default function SelfServiceRequestsAdmin({participants=[]}){
+export default function SelfServiceRequestsAdmin({participants=[],onChanged}){
   const [rows,setRows]=useState([]);
   const [filter,setFilter]=useState('pending');
   const [busy,setBusy]=useState(false);
@@ -37,6 +37,7 @@ export default function SelfServiceRequestsAdmin({participants=[]}){
       setNotice(decision==='approve'?'Pengajuan disetujui.':'Pengajuan ditolak.');
       setReviewDialog(null);
       await load();
+      await onChanged?.();
     }catch(e){setError(e.message)}finally{setBusy(false)}
   }
 
@@ -58,6 +59,7 @@ export default function SelfServiceRequestsAdmin({participants=[]}){
       setCreateRefund(false);
       setCreateDialog(null);
       await load();
+      await onChanged?.();
     }catch(err){setError(err.message)}finally{setBusy(false)}
   }
 
@@ -84,7 +86,7 @@ export default function SelfServiceRequestsAdmin({participants=[]}){
 
     <form ref={createFormRef} className="panel request-admin-create" onSubmit={prepareWithdrawal}>
       <div className="panel-head"><div><h2>Ajukan atas nama peserta</h2><p>Dipakai jika peserta menghubungi panitia untuk pengunduran diri.</p></div></div>
-      <div className="field"><label>Peserta</label><select name="registrationId" required defaultValue=""><option value="" disabled>Pilih peserta</option>{participants.map(p=><option key={p.id} value={p.id}>{p.registration_code} · {p.full_name}</option>)}</select></div>
+      <div className="field"><label>Peserta</label><select name="registrationId" required defaultValue=""><option value="" disabled>Pilih peserta</option>{participants.filter(p=>p.lifecycle_status!=='withdrawn').map(p=><option key={p.id} value={p.id}>{p.registration_code} · {p.full_name}</option>)}</select></div>
       <div className="field"><label>Alasan *</label><textarea name="reason" rows="3" required/></div>
       <label className="agreement refund-toggle refund-choice-card"><input className="ui-checkbox" type="checkbox" checked={createRefund} onChange={e=>setCreateRefund(e.target.checked)}/><span>Sekaligus ajukan refund</span></label>
       {createRefund&&<div className="refund-bank-grid request-refund-grid"><div className="field"><label>Bank</label><input name="bank_name" required/></div><div className="field"><label>No. rekening</label><input name="account_number" required/></div><div className="field account-holder-field"><label>Pemilik rekening</label><input name="account_holder" required/></div></div>}
