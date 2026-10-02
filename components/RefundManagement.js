@@ -3,6 +3,7 @@
 import { useEffect,useMemo,useState } from 'react';
 import { getSupabaseBrowser } from '../lib/supabase-browser';
 import ActionDialog from './ActionDialog';
+import writeExcelFile from 'write-excel-file/browser';
 
 const labels={requested:'Diajukan',under_review:'Sedang direview',ready:'Siap',processing:'Processing',refunded:'Selesai',rejected:'Ditolak',cancelled:'Dibatalkan'};
 function money(v){return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(v||0))}
@@ -76,10 +77,28 @@ export default function RefundManagement(){
     const rows=refunds.filter(x=>x.batch_id===batch.id);
     if(!rows.length){setError('Data refund pada batch belum termuat. Muat ulang dashboard.');return}
     try{
-      const {default:writeXlsxFile}=await import('write-excel-file');
-      const schema=[{column:'No',type:Number,value:r=>r.no},{column:'Batch',type:String,value:r=>r.batch},{column:'No. Registrasi',type:String,value:r=>r.registration_code},{column:'Nama Peserta',type:String,value:r=>r.name},{column:'Bank',type:String,value:r=>r.bank},{column:'Nomor Rekening',type:String,value:r=>r.account},{column:'Nama Pemilik Rekening',type:String,value:r=>r.holder},{column:'Nominal Refund',type:Number,format:'#,##0',value:r=>r.amount},{column:'Email',type:String,value:r=>r.email},{column:'WhatsApp',type:String,value:r=>r.whatsapp}];
-      const data=rows.map((x,i)=>({no:i+1,batch:batch.batch_code,registration_code:x.registration?.registration_code||'',name:x.registration?.full_name||'',bank:x.bank_name,account:x.account_number,holder:x.account_holder,amount:Number(x.approved_amount||x.requested_amount||0),email:x.registration?.email||'',whatsapp:x.registration?.whatsapp||''}));
-      await writeXlsxFile(data,{schema,fileName:`refund-${batch.batch_code}.xlsx`});
+      setError('');
+      const header=['No','Batch','No. Registrasi','Nama Peserta','Bank','Nomor Rekening','Nama Pemilik Rekening','Nominal Refund','Email','WhatsApp'].map(value=>({value,fontWeight:'bold'}));
+      const sheetData=[
+        header,
+        ...rows.map((x,i)=>[
+          i+1,
+          batch.batch_code||'',
+          x.registration?.registration_code||'',
+          x.registration?.full_name||'',
+          x.bank_name||'',
+          x.account_number||'',
+          x.account_holder||'',
+          {value:Number(x.approved_amount||x.requested_amount||0),type:Number,format:'#,##0'},
+          x.registration?.email||'',
+          x.registration?.whatsapp||''
+        ])
+      ];
+      const columns=[
+        {width:6},{width:20},{width:28},{width:32},{width:16},
+        {width:22},{width:28},{width:20},{width:32},{width:20}
+      ];
+      await writeExcelFile(sheetData,{sheet:'Refund',columns}).toFile(`refund-${batch.batch_code}.xlsx`);
     }catch(e){setError(`Export gagal: ${e.message}`)}
   }
 
