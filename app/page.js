@@ -2,6 +2,7 @@ import PublicHeader from '../components/PublicHeader';
 import PublicEventSummary from '../components/PublicEventSummary';
 import { getSupabaseAdmin } from '../lib/supabase-admin';
 import { resolveEventState } from '../lib/event-state';
+import LandingRegistrationStatus from '../components/LandingRegistrationStatus';
 
 export const dynamic='force-dynamic';
 
@@ -25,13 +26,7 @@ export default async function Home(){
           </div>
           <div className="trust-row"><span>Dokumen privat</span><span>Status dapat dipantau</span><span>Email konfirmasi otomatis</span></div>
         </div>
-        <aside className="landing-info-card">
-          <div className="info-ribbon">Pendaftaran</div>
-          <div className="landing-info-block"><small>Batas pendaftaran</small><strong>1 Oktober 2026</strong><span>Pastikan pendaftaran diselesaikan sebelum batas waktu.</span></div>
-          <div className="landing-info-block"><small>Biaya pendaftaran</small><strong>Rp 1.000.000</strong><span>BNI 6666512055 · a.n APTFI</span></div>
-          <div className="landing-info-block"><small>Syarat utama</small><ul><li>Memiliki STRA</li><li>Pengalaman praktik/mengajar sesuai ketentuan</li></ul></div>
-          <a href="/panduan" className="text-link">Lihat persyaratan lengkap →</a>
-        </aside>
+        <LandingRegistrationStatus />
       </section>
       <PublicEventSummary/>
       <section className="landing-choice-section landing-prep-section">
