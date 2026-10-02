@@ -64,6 +64,29 @@ export default function LandingRegistrationStatus(){
       : modePresentation(mode,settings?.modeAvailability?.[mode]))
   })),[failed,settings]);
 
+  useEffect(()=>{
+    if(!settings||failed)return;
+    const registrationAvailable=!!(settings?.availability?.Online||settings?.availability?.Offline);
+    const links=[...document.querySelectorAll('a[href="/daftar"], a[data-registration-cta="1"]')];
+    for(const link of links){
+      if(!link.dataset.registrationOriginalHref)link.dataset.registrationOriginalHref=link.getAttribute('href')||'/daftar';
+      link.dataset.registrationCta='1';
+      if(!registrationAvailable){
+        link.removeAttribute('href');
+        link.setAttribute('aria-disabled','true');
+        link.setAttribute('tabindex','-1');
+        link.classList.add('registration-cta-disabled');
+        link.title='Pendaftaran Online dan Offline sedang tidak tersedia.';
+      }else{
+        link.setAttribute('href',link.dataset.registrationOriginalHref||'/daftar');
+        link.removeAttribute('aria-disabled');
+        link.removeAttribute('tabindex');
+        link.classList.remove('registration-cta-disabled');
+        link.removeAttribute('title');
+      }
+    }
+  },[settings,failed]);
+
   return (
     <aside className="landing-info-card landing-registration-card">
       <div className="landing-registration-heading landing-registration-heading-compact">

@@ -351,3 +351,15 @@ h1,h2,h3,h4,.brand,.btn,.status,.eyebrow{font-family:var(--font-lato),Lato,Arial
 /* v0.4.14 — homepage registration status synced with per-mode windows */
 .landing-registration-card{display:flex;flex-direction:column}.landing-registration-heading{padding:12px 0 14px;border-bottom:1px solid #e2eaf8}.landing-registration-heading small,.landing-registration-heading strong,.landing-registration-heading span{display:block}.landing-registration-heading small{font-size:11px;color:#7181a4}.landing-registration-heading strong{font-size:19px;color:#12205b;margin:4px 0}.landing-registration-heading span{font-size:11px;line-height:1.5;color:#7482a0}.landing-mode-list{display:grid;gap:9px;padding:14px 0}.landing-mode-row{padding:11px 12px;border:1px solid #dfe8f6;border-radius:13px;background:#fff}.landing-mode-row-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.landing-mode-row-head>strong{font-size:13px;color:#12205b}.landing-mode-row p{margin:5px 0 0;color:#68789a;font-size:11px;line-height:1.45}.landing-mode-badge{display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900;white-space:nowrap}.landing-mode-badge.is-open{background:#e9f8ef;color:#147443}.landing-mode-badge.is-full{background:#fff3df;color:#995108}.landing-mode-badge.is-closed{background:#f0f3f8;color:#68748b}.landing-mode-badge.is-scheduled{background:#edf3ff;color:#285bc7}.landing-mode-badge.is-neutral{background:#f2f4f7;color:#697386}.landing-registration-alert{padding:10px 12px;border-radius:11px;font-size:10px;line-height:1.5;margin:0 0 2px}.landing-registration-alert.is-info{background:#eef5ff;border:1px solid #d6e5ff;color:#315fbd}.landing-registration-alert.is-full{background:#fff6e8;border:1px solid #f6d8aa;color:#92500e}.landing-registration-alert.is-closed{background:#f5f7fa;border:1px solid #e1e6ee;color:#657188}.landing-registration-alert.is-neutral{background:#f7f9fc;border:1px solid #e2e8f2;color:#657188}.landing-registration-card .landing-payment-block{padding-top:14px}.landing-registration-card .landing-info-block{padding-bottom:13px}.landing-requirement-link{display:inline-block;padding-top:11px;font-size:12px}
 @media(max-width:760px){.landing-registration-heading strong{font-size:17px}.landing-mode-row{padding:10px}.landing-mode-row-head{align-items:flex-start}.landing-mode-badge{font-size:8px}}
+
+/* v0.4.16: homepage CTA follows real registration availability */
+.registration-cta-disabled,
+.registration-cta-disabled:hover,
+.registration-cta-disabled:focus{
+  opacity:.52!important;
+  cursor:not-allowed!important;
+  pointer-events:none!important;
+  filter:grayscale(.08);
+  box-shadow:none!important;
+}
+.registration-rejected-note{border:1px solid #fecaca;background:#fff7f7;color:#991b1b;border-radius:14px;padding:14px 16px}

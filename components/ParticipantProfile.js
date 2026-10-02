@@ -36,6 +36,8 @@ export default function ParticipantProfile({initialRegistration,onChanged}){
   const pending=(data?.requests||[]).filter(x=>x.status==='pending');
   const refund=data?.refund||null;
   const profileLocked=reg.lifecycle_status!=='active';
+  const registrationRejected=reg.lifecycle_status==='rejected';
+  const registrationInactive=['withdrawn','rejected'].includes(reg.lifecycle_status);
   const participantRule=participantTypes.find(x=>x.value===profileType);
   const requiresPractice=!!participantRule?.meta?.requires_practice;
   const requiresTeaching=!!participantRule?.meta?.requires_teaching;
@@ -102,7 +104,7 @@ export default function ParticipantProfile({initialRegistration,onChanged}){
     {error&&<div className="alert alert-error">{error}</div>}
     {notice&&<div className="alert alert-success">{notice}</div>}
 
-    {profileLocked&&<div className="participant-card profile-withdrawn-banner"><div><div className="eyebrow">Status Pendaftaran</div><h2>{reg.lifecycle_status==='withdrawn'?'Mengundurkan diri':'Pengunduran diri menunggu review'}</h2><p>{reg.lifecycle_status==='withdrawn'?'Profil tidak dapat diedit lagi. Riwayat pendaftaran dan refund tetap dapat dipantau dari halaman ini.':'Profil dikunci sementara sampai panitia memproses pengajuan. Anda masih dapat membatalkan pengajuan yang berstatus Menunggu.'}</p></div></div>}
+    {profileLocked&&<div className="participant-card profile-withdrawn-banner"><div><div className="eyebrow">Status Pendaftaran</div><h2>{registrationRejected?'Pendaftaran ditolak':reg.lifecycle_status==='withdrawn'?'Mengundurkan diri':'Pengunduran diri menunggu review'}</h2><p>{registrationRejected?`Pendaftaran Anda dinyatakan tidak memenuhi persyaratan.${reg.rejected_reason?` Alasan: ${reg.rejected_reason}`:''} ${reg.payment_status==='verified'?'Karena pembayaran sudah terverifikasi, Anda masih dapat mengajukan refund di bawah.':''}`:reg.lifecycle_status==='withdrawn'?'Profil tidak dapat diedit lagi. Riwayat pendaftaran dan refund tetap dapat dipantau dari halaman ini.':'Profil dikunci sementara sampai panitia memproses pengajuan. Anda masih dapat membatalkan pengajuan yang berstatus Menunggu.'}</p></div></div>}
 
     <form className="participant-card profile-form-card" onSubmit={saveProfile}>
       <div className="participant-card-head"><div><div className="eyebrow brand-blue">Profil Saya</div><h2>Data peserta</h2><p>Perbarui data pribadi dan profesional. Perubahan STRA/profesi akan diverifikasi ulang.</p></div></div>
@@ -139,7 +141,7 @@ export default function ParticipantProfile({initialRegistration,onChanged}){
       </div>
     </section>
 
-    {reg.lifecycle_status!=='withdrawn'&&<section className="participant-card danger-zone-card">
+    {!registrationInactive&&<section className="participant-card danger-zone-card">
       <div className="participant-card-head"><div><div className="eyebrow danger-text">Pengaturan Pendaftaran</div><h2>Ajukan pengunduran diri</h2><p>Pengajuan tidak langsung membatalkan pendaftaran. Panitia akan melakukan review terlebih dahulu.</p></div></div>
       <form ref={withdrawalFormRef} onSubmit={prepareWithdrawal} className="withdrawal-form">
         <div className="field"><label>Alasan pengunduran diri *</label><textarea name="reason" rows="3" required placeholder="Jelaskan alasan secara singkat."/></div>
@@ -156,8 +158,8 @@ export default function ParticipantProfile({initialRegistration,onChanged}){
       </form>
     </section>}
 
-    {reg.lifecycle_status==='withdrawn'&&reg.payment_status==='verified'&&!refund&&<section className="participant-card">
-      <div className="participant-card-head"><div><div className="eyebrow brand-blue">Refund</div><h2>Ajukan refund</h2><p>Pendaftaran Anda telah berstatus mengundurkan diri dan pembayaran sebelumnya terverifikasi.</p></div></div>
+    {registrationInactive&&reg.payment_status==='verified'&&!refund&&<section className="participant-card">
+      <div className="participant-card-head"><div><div className="eyebrow brand-blue">Refund</div><h2>Ajukan refund</h2><p>{registrationRejected?'Pendaftaran Anda telah ditolak panitia dan pembayaran sebelumnya terverifikasi.':'Pendaftaran Anda telah berstatus mengundurkan diri dan pembayaran sebelumnya terverifikasi.'}</p></div></div>
       <form ref={refundFormRef} onSubmit={prepareRefund}>
         <div className="refund-bank-grid">
           <div className="field"><label>Bank *</label><input name="bank_name" required/></div>

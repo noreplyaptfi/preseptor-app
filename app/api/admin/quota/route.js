@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '../../../../lib/auth';
 import { getSupabaseAdmin } from '../../../../lib/supabase-admin';
 import { logActivity } from '../../../../lib/audit';
+import { ACTIVE_REGISTRATION_STATUSES } from '../../../../lib/registration-lifecycle';
 
 export const dynamic='force-dynamic';
 
@@ -13,9 +14,9 @@ function quotaNumber(value,label){
 
 async function counts(db,eventId){
   const [total,online,offline]=await Promise.all([
-    db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',eventId).neq('lifecycle_status','withdrawn'),
-    db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',eventId).neq('lifecycle_status','withdrawn').eq('attendance_mode','Online'),
-    db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',eventId).neq('lifecycle_status','withdrawn').eq('attendance_mode','Offline')
+    db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',eventId).in('lifecycle_status',ACTIVE_REGISTRATION_STATUSES),
+    db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',eventId).in('lifecycle_status',ACTIVE_REGISTRATION_STATUSES).eq('attendance_mode','Online'),
+    db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',eventId).in('lifecycle_status',ACTIVE_REGISTRATION_STATUSES).eq('attendance_mode','Offline')
   ]);
   return {total:Number(total.count||0),online:Number(online.count||0),offline:Number(offline.count||0)};
 }

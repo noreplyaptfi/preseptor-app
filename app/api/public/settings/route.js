@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '../../../../lib/supabase-admin';
 import { resolveEventState } from '../../../../lib/event-state';
 import { resolveAllModeRegistrationWindows } from '../../../../lib/registration-mode-window';
+import { ACTIVE_REGISTRATION_STATUSES } from '../../../../lib/registration-lifecycle';
 
 export const dynamic='force-dynamic';
 
@@ -29,9 +30,9 @@ export async function GET(){
   if(error||!event)return NextResponse.json({message:'Event belum dikonfigurasi.'},{status:503});
 
   const [total,online,offline]=await Promise.all([
-    db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',event.id).neq('lifecycle_status','withdrawn'),
-    db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',event.id).neq('lifecycle_status','withdrawn').eq('attendance_mode','Online'),
-    db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',event.id).neq('lifecycle_status','withdrawn').eq('attendance_mode','Offline')
+    db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',event.id).in('lifecycle_status',ACTIVE_REGISTRATION_STATUSES),
+    db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',event.id).in('lifecycle_status',ACTIVE_REGISTRATION_STATUSES).eq('attendance_mode','Online'),
+    db.from('registrations').select('id',{count:'exact',head:true}).eq('event_id',event.id).in('lifecycle_status',ACTIVE_REGISTRATION_STATUSES).eq('attendance_mode','Offline')
   ]);
 
   if(total.error||online.error||offline.error){console.error('public quota counts:',total.error||online.error||offline.error);return NextResponse.json({message:'Status kuota belum dapat dibaca.'},{status:503})}

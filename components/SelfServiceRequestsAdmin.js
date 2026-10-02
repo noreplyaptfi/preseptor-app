@@ -86,7 +86,7 @@ export default function SelfServiceRequestsAdmin({participants=[],onChanged}){
 
     <form ref={createFormRef} className="panel request-admin-create" onSubmit={prepareWithdrawal}>
       <div className="panel-head"><div><h2>Ajukan atas nama peserta</h2><p>Dipakai jika peserta menghubungi panitia untuk pengunduran diri.</p></div></div>
-      <div className="field"><label>Peserta</label><select name="registrationId" required defaultValue=""><option value="" disabled>Pilih peserta</option>{participants.filter(p=>p.lifecycle_status!=='withdrawn').map(p=><option key={p.id} value={p.id}>{p.registration_code} · {p.full_name}</option>)}</select></div>
+      <div className="field"><label>Peserta</label><select name="registrationId" required defaultValue=""><option value="" disabled>Pilih peserta</option>{participants.filter(p=>!['withdrawn','rejected'].includes(p.lifecycle_status)).map(p=><option key={p.id} value={p.id}>{p.registration_code} · {p.full_name}</option>)}</select></div>
       <div className="field"><label>Alasan *</label><textarea name="reason" rows="3" required/></div>
       <label className="agreement refund-toggle refund-choice-card"><input className="ui-checkbox" type="checkbox" checked={createRefund} onChange={e=>setCreateRefund(e.target.checked)}/><span>Sekaligus ajukan refund</span></label>
       {createRefund&&<div className="refund-bank-grid request-refund-grid"><div className="field"><label>Bank</label><input name="bank_name" required/></div><div className="field"><label>No. rekening</label><input name="account_number" required/></div><div className="field account-holder-field"><label>Pemilik rekening</label><input name="account_holder" required/></div></div>}
