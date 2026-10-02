@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 const MODE_ORDER=['Online','Offline'];
@@ -60,32 +59,20 @@ export default function LandingRegistrationStatus(){
 
   const rows=useMemo(()=>MODE_ORDER.map(mode=>({
     mode,
-    ...modePresentation(mode,settings?.modeAvailability?.[mode])
-  })),[settings]);
-
-  const overall=useMemo(()=>{
-    if(failed)return {tone:'neutral',text:'Status pendaftaran dapat dilihat pada halaman formulir.'};
-    if(!settings)return null;
-    const states=MODE_ORDER.map(mode=>settings?.modeAvailability?.[mode]).filter(Boolean);
-    const selectable=states.filter(item=>item.selectable).length;
-    if(selectable===2)return null;
-    if(selectable===1)return {tone:'info',text:'Satu mode pendaftaran masih tersedia. Periksa status Online dan Offline di bawah.'};
-    const allFull=states.length===2&&states.every(item=>item.reason==='quota_full'||item.reason==='total_quota_full');
-    if(allFull)return {tone:'full',text:'Kuota pendaftaran saat ini sudah penuh.'};
-    return {tone:'closed',text:'Pendaftaran Online dan Offline saat ini tidak tersedia.'};
-  },[failed,settings]);
+    ...(failed
+      ? {tone:'neutral',label:'Lihat formulir',detail:'Status pendaftaran dapat dilihat pada halaman formulir.'}
+      : modePresentation(mode,settings?.modeAvailability?.[mode]))
+  })),[failed,settings]);
 
   return (
     <aside className="landing-info-card landing-registration-card">
-      <span className="info-ribbon">Pendaftaran</span>
-
-      <div className="landing-registration-heading">
+      <div className="landing-registration-heading landing-registration-heading-compact">
         <small>Status pendaftaran</small>
         <strong>Online & Offline</strong>
-        <span>Status berikut otomatis mengikuti jadwal dan kuota yang diatur panitia.</span>
+        <span>Status otomatis mengikuti jadwal dan kuota yang diatur panitia.</span>
       </div>
 
-      <div className="landing-mode-list" aria-live="polite">
+      <div className="landing-mode-list landing-mode-list-compact" aria-live="polite">
         {rows.map(row=>(
           <div className="landing-mode-row" key={row.mode}>
             <div className="landing-mode-row-head">
@@ -96,23 +83,6 @@ export default function LandingRegistrationStatus(){
           </div>
         ))}
       </div>
-
-      {overall&&<div className={`landing-registration-alert is-${overall.tone}`}>{overall.text}</div>}
-
-      <div className="landing-info-block landing-payment-block">
-        <small>Biaya pendaftaran</small>
-        <strong>Rp1.000.000</strong>
-        <span>BNI 6666512055 · a.n APTFI</span>
-      </div>
-
-      <div className="landing-info-block">
-        <small>Syarat utama</small>
-        <ul>
-          <li>Memiliki STRA</li>
-          <li>Pengalaman praktik/mengajar sesuai ketentuan</li>
-        </ul>
-      </div>
-      <Link className="text-link landing-requirement-link" href="/panduan">Lihat persyaratan lengkap →</Link>
     </aside>
   );
 }
