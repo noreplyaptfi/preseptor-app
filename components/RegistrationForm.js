@@ -21,6 +21,27 @@ function ChoiceCard({name,value,checked,onChange,title,description,disabled=fals
   </label>
 }
 
+function formatModeDate(value){
+  if(!value)return '';
+  try{return new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Jakarta'}).format(new Date(value))+' WIB'}catch{return value}
+}
+function modeBadge(item){
+  if(!item||item.selectable)return '';
+  if(item.reason==='quota_full'||item.reason==='total_quota_full')return 'Kuota penuh';
+  if(item.reason==='not_open')return 'Belum dibuka';
+  if(item.reason==='maintenance')return 'Maintenance';
+  return 'Pendaftaran ditutup';
+}
+function modeNotice(mode,item){
+  if(!item||item.selectable)return null;
+  let text=item.message||`Pendaftaran ${mode} sedang tidak tersedia.`;
+  if(item.reason==='quota_full')text=`Pendaftaran ${mode} tidak dapat dipilih karena kuotanya sudah penuh.`;
+  if(item.reason==='total_quota_full')text='Kuota pendaftaran keseluruhan sudah penuh.';
+  if(item.reason==='not_open'&&item.opens_at)text=`Pendaftaran ${mode} belum dibuka. Mulai ${formatModeDate(item.opens_at)}.`;
+  if(item.reason==='closed'&&item.closes_at)text=`Pendaftaran ${mode} sudah ditutup sejak ${formatModeDate(item.closes_at)}.`;
+  return text;
+}
+
 export default function RegistrationForm(){
   const [type,setType]=useState('');
   const [mode,setMode]=useState('');
@@ -29,14 +50,16 @@ export default function RegistrationForm(){
   const [universities,setUniversities]=useState([]);
   const [resetKey,setResetKey]=useState(0);
   const [availability,setAvailability]=useState(null);
+  const [modeAvailability,setModeAvailability]=useState(null);
   const [uploadProgress,setUploadProgress]=useState('');
   const [master,setMaster]=useState({practice_type:[],participant_type:[]});
-  async function loadAvailability(){try{const r=await fetch('/api/public/settings',{cache:'no-store'});const j=await r.json();if(r.ok)setAvailability(j.availability||null)}catch{}}
+  async function loadAvailability(){try{const r=await fetch('/api/public/settings',{cache:'no-store'});const j=await r.json();if(r.ok){setAvailability(j.availability||null);setModeAvailability(j.modeAvailability||null)}}catch{}}
   useEffect(()=>{
     fetch('/api/universities').then(async r=>{if(!r.ok)throw new Error('homebase');const j=await r.json();return j.universities||[]}).then(setUniversities).catch(()=>fetch('/universities.json').then(r=>r.json()).then(setUniversities).catch(()=>setUniversities([])));
     fetch('/api/master-data').then(r=>r.ok?r.json():Promise.reject()).then(j=>setMaster(j.options||{})).catch(()=>setMaster({practice_type:[{id:'a',value:'Apotek',label:'Apotek',min_years:3,active:true},{id:'rs',value:'Rumah Sakit (RS)',label:'Rumah Sakit (RS)',min_years:3,active:true},{id:'i',value:'Industri',label:'Industri Farmasi',min_years:3,active:true},{id:'pbf',value:'PBF',label:'PBF',min_years:3,active:true},{id:'pkm',value:'Puskesmas',label:'Puskesmas',min_years:1,active:true}],participant_type:[{id:'p',value:'practitioner',label:'Praktisi',meta:{requires_practice:true}},{id:'l',value:'lecturer',label:'Dosen',meta:{requires_teaching:true}},{id:'lp',value:'lecturer_practitioner',label:'Dosen & Praktisi',meta:{requires_practice:true,requires_teaching:true}}]}));
     loadAvailability();
   },[]);
+  useEffect(()=>{if(mode&&modeAvailability?.[mode]&&!modeAvailability[mode].selectable)setMode('')},[mode,modeAvailability]);
   const practitioner=['practitioner','lecturer_practitioner'].includes(type);
   const lecturer=['lecturer','lecturer_practitioner'].includes(type);
 
@@ -115,8 +138,15 @@ export default function RegistrationForm(){
       </section>
 
       <section className="form-section-card" id="mode">
-        <div className="form-section-heading"><span className="section-number">04</span><div><div className="eyebrow brand-blue">Keikutsertaan</div><h2>Pilih mode pelatihan</h2><p>Pilih salah satu mode yang akan diikuti selama kegiatan.</p></div></div>
-        <div className="choice-input-grid two"><ChoiceCard name="attendance_mode" value="Online" checked={mode==='Online'} onChange={e=>setMode(e.target.value)} title="Online" description="Mengikuti melalui Zoom Meeting" disabled={availability?.Online===false} badge={availability?.Online===false?'Kuota penuh':''}/><ChoiceCard name="attendance_mode" value="Offline" checked={mode==='Offline'} onChange={e=>setMode(e.target.value)} title="Offline" description="Kampus Farmasi Universitas Andalas" disabled={availability?.Offline===false} badge={availability?.Offline===false?'Kuota penuh':''}/></div>
+        <div className="form-section-heading"><span className="section-number">04</span><div><div className="eyebrow brand-blue">Keikutsertaan</div><h2>Pilih mode pelatihan</h2><p>Pilih salah satu mode yang masih tersedia pada periode pendaftarannya.</p></div></div>
+        {(modeNotice('Online',modeAvailability?.Online)||modeNotice('Offline',modeAvailability?.Offline))&&<div className="mode-registration-notices">
+          {modeNotice('Online',modeAvailability?.Online)&&<div className={`mode-registration-notice ${modeAvailability?.Online?.reason==='quota_full'||modeAvailability?.Online?.reason==='total_quota_full'?'is-full':'is-closed'}`}><strong>Online</strong><span>{modeNotice('Online',modeAvailability?.Online)}</span></div>}
+          {modeNotice('Offline',modeAvailability?.Offline)&&<div className={`mode-registration-notice ${modeAvailability?.Offline?.reason==='quota_full'||modeAvailability?.Offline?.reason==='total_quota_full'?'is-full':'is-closed'}`}><strong>Offline</strong><span>{modeNotice('Offline',modeAvailability?.Offline)}</span></div>}
+        </div>}
+        <div className="choice-input-grid two">
+          <ChoiceCard name="attendance_mode" value="Online" checked={mode==='Online'} onChange={e=>setMode(e.target.value)} title="Online" description={modeAvailability?.Online?.selectable&&modeAvailability?.Online?.closes_at?`Mengikuti melalui Zoom Meeting · daftar sampai ${formatModeDate(modeAvailability.Online.closes_at)}`:'Mengikuti melalui Zoom Meeting'} disabled={availability?.Online===false} badge={modeBadge(modeAvailability?.Online)}/>
+          <ChoiceCard name="attendance_mode" value="Offline" checked={mode==='Offline'} onChange={e=>setMode(e.target.value)} title="Offline" description={modeAvailability?.Offline?.selectable&&modeAvailability?.Offline?.closes_at?`Kampus Farmasi Universitas Andalas · daftar sampai ${formatModeDate(modeAvailability.Offline.closes_at)}`:'Kampus Farmasi Universitas Andalas'} disabled={availability?.Offline===false} badge={modeBadge(modeAvailability?.Offline)}/>
+        </div>
       </section>
 
       <section className="form-section-card" id="pembayaran">
