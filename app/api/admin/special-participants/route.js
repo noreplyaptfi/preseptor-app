@@ -54,7 +54,7 @@ function onboardingHtml({name,email,code,mode}){
       <div><strong>Nomor pendaftaran:</strong> ${htmlEscape(code)}</div>
       <div><strong>Email akun:</strong> ${htmlEscape(email)}</div>
     </div>
-    <p>Untuk keamanan, buka halaman login lalu pilih <strong>Lupa Password</strong> untuk membuat password Anda. Setelah itu login dan lengkapi Profil Saya, termasuk memilih Homebase, mengisi STRA, data profesional, bukti pengalaman, dan bukti pembayaran.</p>
+    <p>Untuk keamanan, buka halaman login lalu pilih <strong>Lupa Password</strong> untuk membuat password Anda. Setelah itu login dan lengkapi Profil Saya, STRA, bukti pengalaman, dan bukti pembayaran.</p>
     <p style="margin:24px 0"><a href="${login}" style="background:#1d4ed8;color:#fff;text-decoration:none;padding:12px 18px;border-radius:9px;display:inline-block;font-weight:700">Buka Halaman Login</a></p>
     <p>Alamat login: <a href="${login}">${login}</a>.</p>
     <p>Panitia Pelatihan Preseptor APTFI</p>
@@ -112,8 +112,9 @@ export async function POST(request){
     const email=normalizeEmail(cleanText(item.email,190));
     const whatsapp=cleanText(item.whatsapp,60);
     const normalizedWhatsapp=normalizePhone(whatsapp);
+    const university='';
     const mode=cleanText(item.attendance_mode||item.mode,20);
-    const base={row:index+1,name,email,whatsapp,mode};
+    const base={row:index+1,name,email,whatsapp,university,mode};
     let error='';
     if(name.length<3)error='Nama peserta wajib diisi.';
     else if(!validEmail(email))error='Email tidak valid.';
@@ -139,7 +140,7 @@ export async function POST(request){
         authUser=created.data?.user;createdAuthUser=authUser;if(authUser)authByEmail.set(email,authUser);
       }
       const id=crypto.randomUUID(),code=await registrationCode(c.db),now=new Date().toISOString();
-      const row={id,event_id:c.event.id,registration_code:code,full_name:name,name_core:name,title_prefix:'',title_suffix:'',email,normalized_email:email,whatsapp,normalized_whatsapp:normalizedWhatsapp,university:'',attendance_mode:mode,participant_type:null,practice_type:null,practice_name:null,practice_years:0,teaching_years:0,stra_number:null,normalized_stra:null,requirements_status:'incomplete',payment_status:'pending',overall_status:'pending',lifecycle_status:'active',enrollment_source:'admin_special',special_enrollment_at:now,special_enrollment_by:c.auth.user.email,created_at:now,updated_at:now};
+      const row={id,event_id:c.event.id,registration_code:code,full_name:name,name_core:name,title_prefix:'',title_suffix:'',email,normalized_email:email,whatsapp,normalized_whatsapp:normalizedWhatsapp,university,attendance_mode:mode,participant_type:null,practice_type:null,practice_name:null,practice_years:0,teaching_years:0,stra_number:null,normalized_stra:null,requirements_status:'incomplete',payment_status:'pending',overall_status:'pending',lifecycle_status:'active',enrollment_source:'admin_special',special_enrollment_at:now,special_enrollment_by:c.auth.user.email,created_at:now,updated_at:now};
       const inserted=await c.db.from('registrations').insert(row).select('id,registration_code,full_name,email,attendance_mode').single();
       if(inserted.error){if(createdAuthUser?.id)await c.db.auth.admin.deleteUser(createdAuthUser.id).catch(()=>{});throw new Error(`Pendaftaran gagal dibuat: ${inserted.error.message}`)}
       const reg=inserted.data;const emailResult=await sendOnboarding(c.db,reg);
