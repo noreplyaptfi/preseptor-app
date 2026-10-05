@@ -6,6 +6,9 @@ import SelfServiceRequestsAdmin from './SelfServiceRequestsAdmin';
 import RefundManagement from './RefundManagement';
 import MasterDataAdmin from './MasterDataAdmin';
 import SpecialParticipantsAdmin from './SpecialParticipantsAdmin';
+import DayHOperations from './DayHOperations';
+import TestParticipantsAdmin from './TestParticipantsAdmin';
+import PretestAdmin from './PretestAdmin';
 import ActionDialog from './ActionDialog';
 import { isActiveRegistration,lifecycleLabel } from '../lib/registration-lifecycle';
 
@@ -48,7 +51,7 @@ export default function AdminDashboard(){
     setOpenNavGroup(current=>current===group?'':group)
   }
   useEffect(()=>{
-    const group=({participants:'participants',requests:'participants',special:'participants',refunds:'finance',settings:'registration',announcements:'registration',access:'event',masterdata:'system',homebases:'system',team:'system',guide:'system'})[view];
+    const group=({participants:'participants',requests:'participants',special:'participants',refunds:'finance',settings:'registration',announcements:'registration',access:'event',dayh:'event',pretest:'event',masterdata:'system',homebases:'system',testaccounts:'system',team:'system',guide:'system'})[view];
     if(group)setOpenNavGroup(group);
   },[view]);
   async function loadHomebases(){try{const j=await api('/api/admin/universities');setHomebases(j.universities||[])}catch(e){setError(e.message)}}
@@ -101,10 +104,10 @@ export default function AdminDashboard(){
   async function publishAnnouncement(e){e.preventDefault();const bodyHtml=editorRef.current?.innerHTML||'';try{setAnnouncementBusy(true);setError('');const j=await api('/api/admin/announcements',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subject:announcementSubject,audience:announcementAudience,bodyHtml})});setNotice(`Pengumuman dipublikasikan ke ${j.recipientCount} peserta.${j.emailSent?' Email berhasil dikirim.':j.emailError?' Email mengalami kendala: '+j.emailError:''}`);setAnnouncementSubject('');setAnnouncementAudience('all');if(editorRef.current)editorRef.current.innerHTML='';const c=await api('/api/admin/announcements');setAnnouncements(c.announcements||[])}catch(e){setError(e.message)}finally{setAnnouncementBusy(false)}}
   async function logout(){await getSupabaseBrowser().auth.signOut();location.href='/admin/login'}
 
-  const activeRows=useMemo(()=>rows.filter(r=>isActiveRegistration(r.lifecycle_status)),[rows]);
+  const activeRows=useMemo(()=>rows.filter(r=>isActiveRegistration(r.lifecycle_status)&&!r.is_test_account),[rows]);
   const withdrawnRows=useMemo(()=>rows.filter(r=>r.lifecycle_status==='withdrawn'),[rows]);
   const registrationRejectedRows=useMemo(()=>rows.filter(r=>r.lifecycle_status==='rejected'),[rows]);
-  const filtered=useMemo(()=>rows.filter(r=>{const hay=`${r.full_name} ${displayParticipantEmail(r)} ${r.whatsapp||''} ${r.registration_code} ${r.university||''} ${r.stra_number||''}`.toLowerCase();if(q&&!hay.includes(q.toLowerCase()))return false;if(modeFilter!=='all'&&r.attendance_mode!==modeFilter)return false;const active=isActiveRegistration(r.lifecycle_status);if(statusFilter==='active'&&!active)return false;if(statusFilter==='withdrawn'&&r.lifecycle_status!=='withdrawn')return false;if(statusFilter==='registration_rejected'&&r.lifecycle_status!=='rejected')return false;if(statusFilter==='all')return true;if(statusFilter==='docs_pending'&&(!active||!['pending','incomplete'].includes(r.requirements_status)))return false;if(statusFilter==='pay_pending'&&(!active||r.payment_status!=='pending'))return false;if(statusFilter==='verified'&&(!active||r.overall_status!=='verified'))return false;if(statusFilter==='rejected'&&(!active||(r.requirements_status!=='rejected'&&r.payment_status!=='rejected')))return false;return true}),[rows,q,statusFilter,modeFilter]);
+  const filtered=useMemo(()=>rows.filter(r=>{const hay=`${r.full_name} ${displayParticipantEmail(r)} ${r.whatsapp||''} ${r.registration_code} ${r.university||''} ${r.stra_number||''}`.toLowerCase();if(q&&!hay.includes(q.toLowerCase()))return false;if(modeFilter!=='all'&&r.attendance_mode!==modeFilter)return false;const active=isActiveRegistration(r.lifecycle_status)&&!r.is_test_account;if(statusFilter==='active'&&!active)return false;if(statusFilter==='withdrawn'&&r.lifecycle_status!=='withdrawn')return false;if(statusFilter==='registration_rejected'&&r.lifecycle_status!=='rejected')return false;if(statusFilter==='all')return true;if(statusFilter==='docs_pending'&&(!active||!['pending','incomplete'].includes(r.requirements_status)))return false;if(statusFilter==='pay_pending'&&(!active||r.payment_status!=='pending'))return false;if(statusFilter==='verified'&&(!active||r.overall_status!=='verified'))return false;if(statusFilter==='rejected'&&(!active||(r.requirements_status!=='rejected'&&r.payment_status!=='rejected')))return false;return true}),[rows,q,statusFilter,modeFilter]);
   const filteredHomebases=useMemo(()=>homebases.filter(x=>!homebaseQ||String(x.name||'').toLowerCase().includes(homebaseQ.toLowerCase())),[homebases,homebaseQ]);
   const total=activeRows.length,req=activeRows.filter(x=>['pending','incomplete'].includes(x.requirements_status)).length,pay=activeRows.filter(x=>x.payment_status==='pending').length,verified=activeRows.filter(x=>x.overall_status==='verified').length;
   const offlineVerified=activeRows.filter(x=>x.attendance_mode==='Offline'&&x.overall_status==='verified').length,checkedIn=activeRows.filter(x=>x.attendance_mode==='Offline'&&x.checked_in_at).length,onlineVerified=activeRows.filter(x=>x.attendance_mode==='Online'&&x.overall_status==='verified').length;
@@ -144,19 +147,22 @@ export default function AdminDashboard(){
           </div>
         </div>
 
-        <div className={`admin-nav-group ${openNavGroup==='event'?'open':''} ${view==='access'?'has-active':''}`}>
+        <div className={`admin-nav-group ${openNavGroup==='event'?'open':''} ${['access','dayh','pretest'].includes(view)?'has-active':''}`}>
           <button type="button" className="admin-nav-group-toggle" onClick={()=>toggleNavGroup('event')} title="Pelaksanaan"><span className="nav-icon">▣</span><span className="nav-label">Pelaksanaan</span><span className="nav-caret">⌄</span></button>
           <div className="admin-nav-submenu">
             <button title="Akses Acara" className={view==='access'?'active':''} onClick={()=>setView('access')}><span className="nav-sub-dot">•</span><span className="nav-label">Akses Acara</span></button>
-            {['super_admin','event_admin'].includes(adminUser?.role)&&<button title="Check-in" onClick={()=>location.href='/admin/checkin'}><span className="nav-sub-dot">•</span><span className="nav-label">Scan QR</span></button>}
+            {adminUser?.role==='super_admin'&&<button title="Hari-H" className={view==='dayh'?'active':''} onClick={()=>setView('dayh')}><span className="nav-sub-dot">•</span><span className="nav-label">Hari-H</span></button>}
+            {adminUser?.role==='super_admin'&&<button title="Pretest" className={view==='pretest'?'active':''} onClick={()=>setView('pretest')}><span className="nav-sub-dot">•</span><span className="nav-label">Pretest</span></button>}
+            {adminUser?.role==='super_admin'&&<button title="Check-in" onClick={()=>location.href='/admin/checkin'}><span className="nav-sub-dot">•</span><span className="nav-label">Scan QR</span></button>}
           </div>
         </div>
 
-        <div className={`admin-nav-group ${openNavGroup==='system'?'open':''} ${['masterdata','homebases','team','guide'].includes(view)?'has-active':''}`}>
+        <div className={`admin-nav-group ${openNavGroup==='system'?'open':''} ${['masterdata','homebases','testaccounts','team','guide'].includes(view)?'has-active':''}`}>
           <button type="button" className="admin-nav-group-toggle" onClick={()=>toggleNavGroup('system')} title="Data & Sistem"><span className="nav-icon">≡</span><span className="nav-label">Data & Sistem</span><span className="nav-caret">⌄</span></button>
           <div className="admin-nav-submenu">
             {['super_admin','event_admin'].includes(adminUser?.role)&&<button title="Data Master" className={view==='masterdata'?'active':''} onClick={()=>setView('masterdata')}><span className="nav-sub-dot">•</span><span className="nav-label">Data Master</span></button>}
             {['super_admin','event_admin'].includes(adminUser?.role)&&<button title="Data Homebase" className={view==='homebases'?'active':''} onClick={()=>setView('homebases')}><span className="nav-sub-dot">•</span><span className="nav-label">Data Homebase</span></button>}
+            {adminUser?.role==='super_admin'&&<button title="Akun Uji" className={view==='testaccounts'?'active':''} onClick={()=>setView('testaccounts')}><span className="nav-sub-dot">•</span><span className="nav-label">Akun Uji</span></button>}
             {adminUser?.role==='super_admin'&&<button title="Tim Panitia" className={view==='team'?'active':''} onClick={()=>setView('team')}><span className="nav-sub-dot">•</span><span className="nav-label">Tim Panitia</span></button>}
             <button title="Panduan Admin" className={view==='guide'?'active':''} onClick={()=>setView('guide')}><span className="nav-sub-dot">•</span><span className="nav-label">Panduan Admin</span></button>
           </div>
@@ -166,8 +172,8 @@ export default function AdminDashboard(){
     </aside>
 
     <main className="admin-main">
-      <header className="admin-header"><div><div className="eyebrow brand-blue">Dashboard Panitia</div><h1>{view==='overview'?'Ringkasan Kegiatan':view==='participants'?'Daftar Pendaftar':view==='settings'?'Pengaturan Pendaftaran':view==='announcements'?'Pengumuman':view==='access'?'Akses Pelaksanaan':view==='requests'?'Permintaan Peserta':view==='refunds'?'Manajemen Refund':view==='special'?'Peserta Khusus':view==='masterdata'?'Data Master Form':view==='homebases'?'Data Homebase':view==='guide'?'Panduan End-to-End Admin':'Tim Panitia'}</h1></div><div className="admin-header-actions"><a className="btn btn-secondary" href="/" target="_blank">Lihat Situs ↗</a></div></header>
-      <div className="admin-mobile-nav"><button onClick={()=>setView('overview')}>Ringkasan</button><button onClick={()=>setView('participants')}>Pendaftar</button><button onClick={()=>setView('settings')}>Form</button><button onClick={()=>setView('announcements')}>Pengumuman</button><button onClick={()=>setView('access')}>Akses</button>{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('requests')}>Permintaan</button>}{['super_admin','event_admin','payment_verifier'].includes(adminUser?.role)&&<button onClick={()=>setView('refunds')}>Refund</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('special')}>Peserta Khusus</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('masterdata')}>Master</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>location.href='/admin/checkin'}>Scan QR</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('homebases')}>Homebase</button>}{adminUser?.role==='super_admin'&&<button onClick={()=>setView('team')}>Tim</button>}<button onClick={()=>setView('guide')}>Panduan</button></div>
+      <header className="admin-header"><div><div className="eyebrow brand-blue">Dashboard Panitia</div><h1>{view==='overview'?'Ringkasan Kegiatan':view==='participants'?'Daftar Pendaftar':view==='settings'?'Pengaturan Pendaftaran':view==='announcements'?'Pengumuman':view==='access'?'Akses Pelaksanaan':view==='dayh'?'Command Center Hari-H':view==='pretest'?'Pretest':view==='requests'?'Permintaan Peserta':view==='refunds'?'Manajemen Refund':view==='special'?'Peserta Khusus':view==='masterdata'?'Data Master Form':view==='homebases'?'Data Homebase':view==='testaccounts'?'Akun Uji Peserta':view==='guide'?'Panduan End-to-End Admin':'Tim Panitia'}</h1></div><div className="admin-header-actions"><a className="btn btn-secondary" href="/" target="_blank">Lihat Situs ↗</a></div></header>
+      <div className="admin-mobile-nav"><button onClick={()=>setView('overview')}>Ringkasan</button><button onClick={()=>setView('participants')}>Pendaftar</button><button onClick={()=>setView('settings')}>Form</button><button onClick={()=>setView('announcements')}>Pengumuman</button><button onClick={()=>setView('access')}>Akses</button>{adminUser?.role==='super_admin'&&<button onClick={()=>setView('dayh')}>Hari-H</button>}{adminUser?.role==='super_admin'&&<button onClick={()=>setView('pretest')}>Pretest</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('requests')}>Permintaan</button>}{['super_admin','event_admin','payment_verifier'].includes(adminUser?.role)&&<button onClick={()=>setView('refunds')}>Refund</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('special')}>Peserta Khusus</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('masterdata')}>Master</button>}{adminUser?.role==='super_admin'&&<button onClick={()=>location.href='/admin/checkin'}>Scan QR</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('homebases')}>Homebase</button>}{adminUser?.role==='super_admin'&&<button onClick={()=>setView('testaccounts')}>Akun Uji</button>}{adminUser?.role==='super_admin'&&<button onClick={()=>setView('team')}>Tim</button>}<button onClick={()=>setView('guide')}>Panduan</button></div>
       {error&&<div className="alert alert-error">{error}</div>}{notice&&<div className="alert alert-success">{notice}</div>}
 
       {view==='overview'&&<>
@@ -199,6 +205,9 @@ export default function AdminDashboard(){
       {view==='refunds'&&['super_admin','event_admin','payment_verifier'].includes(adminUser?.role)&&<RefundManagement/>}
       {view==='special'&&['super_admin','event_admin'].includes(adminUser?.role)&&<SpecialParticipantsAdmin onChanged={load}/>}
       {view==='masterdata'&&['super_admin','event_admin'].includes(adminUser?.role)&&<MasterDataAdmin/>}
+      {view==='dayh'&&adminUser?.role==='super_admin'&&<DayHOperations onBroadcast={()=>setView('announcements')}/>}
+      {view==='pretest'&&adminUser?.role==='super_admin'&&<PretestAdmin/>}
+      {view==='testaccounts'&&adminUser?.role==='super_admin'&&<TestParticipantsAdmin/>}
 
       {view==='homebases'&&['super_admin','event_admin'].includes(adminUser?.role)&&<section className="homebase-admin-grid">
         <form className="panel homebase-form-panel" onSubmit={saveHomebase}>
@@ -249,7 +258,7 @@ function AdminGuide(){
     ['8. Data Master','Kelola Jenis Tempat Praktik, minimum pengalaman, urutan, serta status aktif/nonaktif dari Data Master. Data lama tidak dihapus saat opsi dinonaktifkan.'],
     ['9. Homebase','Gunakan Data Homebase untuk menambah, mengubah, menonaktifkan, atau mengaktifkan perguruan tinggi pada form peserta.'],
     ['10. Pengumuman & form','Gunakan Pengumuman untuk broadcast peserta dan Status Form untuk buka/tutup/maintenance pendaftaran.'],
-    ['11. Persiapan pelaksanaan','Gunakan Akses Acara untuk mengatur QR Offline dan link Zoom Online. Modul Hari-H lengkap akan masuk pada v0.5.0 setelah v0.4.9 stabil.']
+    ['11. Persiapan pelaksanaan','Gunakan Akses Acara untuk QR/Zoom, Hari-H untuk presensi, dan Pretest untuk assessment awal. Uji seluruh flow memakai Akun Uji sebelum modul dibuka untuk peserta resmi.']
   ];
   return <section className="admin-guide"><div className="panel guide-hero"><div><div className="eyebrow brand-blue">Panduan Operasional</div><h2>Alur kerja panitia dari pendaftaran sampai pelaksanaan</h2><p>Gunakan panduan ini sebagai checklist harian. Selalu lakukan verifikasi dari dashboard dan hindari mengubah data langsung di Supabase kecuali untuk pemeliharaan teknis.</p></div><div className="guide-security-note"><strong>Keamanan</strong><span>Data rekening refund, akun admin, service role key, dan dokumen privat tidak boleh dibagikan di kanal publik.</span></div></div><div className="guide-steps">{steps.map(([title,copy])=><article key={title}><h3>{title}</h3><p>{copy}</p></article>)}</div><div className="panel guide-emergency"><h3>Jika ada kendala operasional</h3><div className="guide-emergency-grid"><div><strong>Form bermasalah</strong><p>Aktifkan Maintenance, beri pesan yang jelas, lalu perbaiki tanpa menerima submit baru.</p></div><div><strong>Email gagal</strong><p>Data tetap tersimpan. Periksa Resend dan email log sebelum mengirim ulang.</p></div><div><strong>Peserta salah data</strong><p>Gunakan Profil/Permintaan atau Edit Data pada record yang sama. Jangan membuat pendaftaran kedua.</p></div></div></div></section>
 }

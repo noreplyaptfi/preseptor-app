@@ -24,7 +24,7 @@ export async function GET(request){
 export async function PATCH(request){
   const auth=await requireUser(request);if(auth.error)return NextResponse.json({message:auth.error},{status:auth.status});
   const db=getSupabaseAdmin(),reg=await registrationFor(db,auth.user.email);if(!reg)return NextResponse.json({message:'Pendaftaran tidak ditemukan.'},{status:404});
-  if(reg.lifecycle_status!=='active')return NextResponse.json({message:'Perubahan profil dikunci selama pengajuan pengunduran diri diproses atau setelah pengunduran diri disetujui.'},{status:409});
+  if(!['active','test'].includes(reg.lifecycle_status))return NextResponse.json({message:'Perubahan profil dikunci selama pengajuan pengunduran diri diproses atau setelah pengunduran diri disetujui.'},{status:409});
   const b=await request.json().catch(()=>({}));
   const data={
     name_core:cleanText(b.name_core||reg.name_core||reg.full_name,255),title_prefix:cleanText(b.title_prefix,80),title_suffix:cleanText(b.title_suffix,120),

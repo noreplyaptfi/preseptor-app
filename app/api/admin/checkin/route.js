@@ -1,58 +1,7 @@
-import { NextResponse } from 'next/server';
-import { requireAdmin } from '../../../../lib/auth';
-import { getSupabaseAdmin } from '../../../../lib/supabase-admin';
-import { verifiedRegistration } from '../../../../lib/event-access';
-import { logActivity } from '../../../../lib/audit';
-
-function payload(reg){
-  const valid=reg.attendance_mode==='Offline'&&verifiedRegistration(reg);
-  return {
-    id:reg.id,
-    registrationCode:reg.registration_code,
-    fullName:reg.full_name,
-    email:reg.email,
-    university:reg.university,
-    attendanceMode:reg.attendance_mode,
-    requirementsStatus:reg.requirements_status,
-    paymentStatus:reg.payment_status,
-    overallStatus:reg.overall_status,
-    valid,
-    checkedInAt:reg.checked_in_at||null,
-    checkedInBy:reg.checked_in_by||null
-  };
-}
-
-async function find(db,token){
-  if(!token) return null;
-  const {data}=await db.from('registrations').select('id,registration_code,full_name,email,university,attendance_mode,requirements_status,payment_status,overall_status,checked_in_at,checked_in_by,checkin_token').eq('checkin_token',token).maybeSingle();
-  return data||null;
-}
-
-export async function GET(request){
-  const auth=await requireAdmin(request);
-  if(auth.error) return NextResponse.json({message:auth.error},{status:auth.status});
-  const token=new URL(request.url).searchParams.get('token')||'';
-  const db=getSupabaseAdmin();
-  const reg=await find(db,token);
-  if(!reg) return NextResponse.json({message:'QR check-in tidak valid atau peserta tidak ditemukan.'},{status:404});
-  return NextResponse.json({registration:payload(reg),canCheckIn:['super_admin','event_admin'].includes(auth.adminUser.role)});
-}
-
-export async function POST(request){
-  const auth=await requireAdmin(request,['super_admin','event_admin']);
-  if(auth.error) return NextResponse.json({message:auth.error},{status:auth.status});
-  const body=await request.json().catch(()=>({}));
-  const token=String(body.token||'').trim();
-  const db=getSupabaseAdmin();
-  const reg=await find(db,token);
-  if(!reg) return NextResponse.json({message:'QR check-in tidak valid atau peserta tidak ditemukan.'},{status:404});
-  if(reg.attendance_mode!=='Offline') return NextResponse.json({message:'QR ini bukan untuk peserta Offline.'},{status:409});
-  if(!verifiedRegistration(reg)) return NextResponse.json({message:'Peserta belum terverifikasi lengkap dan tidak dapat check-in.'},{status:409});
-  if(reg.checked_in_at) return NextResponse.json({ok:true,alreadyCheckedIn:true,registration:payload(reg)});
-  const now=new Date().toISOString();
-  const {data:updated,error}=await db.from('registrations').update({checked_in_at:now,checked_in_by:auth.user.email,updated_at:now}).eq('id',reg.id).is('checked_in_at',null).select('id,registration_code,full_name,email,university,attendance_mode,requirements_status,payment_status,overall_status,checked_in_at,checked_in_by').maybeSingle();
-  if(error) return NextResponse.json({message:'Gagal menyimpan check-in.'},{status:500});
-  const finalReg=updated||await find(db,token);
-  await logActivity({registrationId:reg.id,actorType:'admin',actorEmail:auth.user.email,action:'participant_checked_in',metadata:{registration_code:reg.registration_code}});
-  return NextResponse.json({ok:true,alreadyCheckedIn:!updated,registration:payload(finalReg)});
-}
+import { NextResponse } from 'next/server';import { requireAdmin } from '../../../../lib/auth';import { getSupabaseAdmin } from '../../../../lib/supabase-admin';import { inWindow,participantEligible,isTestRegistration,jakartaDateKey } from '../../../../lib/day-h';import { logActivity } from '../../../../lib/audit';
+export const dynamic='force-dynamic';
+async function findReg(db,token){const {data}=await db.from('registrations').select('id,event_id,registration_code,full_name,email,university,attendance_mode,requirements_status,payment_status,lifecycle_status,is_test_account,checkin_token').eq('checkin_token',token).maybeSingle();return data||null}
+async function pickDay(db,eventId,dayId,test){const {data:event}=await db.from('events').select('day_h_enabled').eq('id',eventId).single();if(!event?.day_h_enabled&&!test)return null;let q=db.from('event_days').select('*').eq('event_id',eventId).eq('active',true);if(dayId)q=q.eq('id',dayId);else q=q.eq('event_date',jakartaDateKey());const {data}=await q.limit(1).maybeSingle();return data||null}
+function payload(reg,day,record){return {registrationCode:reg.registration_code,fullName:reg.full_name,email:reg.email,university:reg.university,attendanceMode:reg.attendance_mode,valid:participantEligible(reg),testAccount:isTestRegistration(reg),checkedInAt:record?.occurred_at||null,day:day?{id:day.id,title:day.title,eventDate:day.event_date}:null}}
+export async function GET(request){const auth=await requireAdmin(request,['super_admin']);if(auth.error)return NextResponse.json({message:auth.error},{status:auth.status});const u=new URL(request.url),token=u.searchParams.get('token')||'',dayId=u.searchParams.get('dayId')||'',db=getSupabaseAdmin(),reg=await findReg(db,token);if(!reg)return NextResponse.json({message:'QR tidak valid atau peserta tidak ditemukan.'},{status:404});const test=isTestRegistration(reg),day=await pickDay(db,reg.event_id,dayId,test);let record=null;if(day){const q=await db.from('attendance_records').select('*').eq('registration_id',reg.id).eq('event_day_id',day.id).eq('attendance_type','checkin').maybeSingle();record=q.data||null}return NextResponse.json({registration:payload(reg,day,record),dayHActive:!!day,windowOpen:!!day&&(test||inWindow(day.checkin_open_at,day.checkin_close_at))})}
+export async function POST(request){const auth=await requireAdmin(request,['super_admin']);if(auth.error)return NextResponse.json({message:auth.error},{status:auth.status});const b=await request.json().catch(()=>({})),db=getSupabaseAdmin(),reg=await findReg(db,String(b.token||''));if(!reg)return NextResponse.json({message:'QR tidak valid.'},{status:404});if(reg.attendance_mode!=='Offline')return NextResponse.json({message:'QR ini bukan peserta Offline.'},{status:409});if(!participantEligible(reg))return NextResponse.json({message:'Peserta belum memenuhi syarat presensi.'},{status:409});const test=isTestRegistration(reg),day=await pickDay(db,reg.event_id,String(b.dayId||''),test);if(!day)return NextResponse.json({message:'Hari-H belum aktif untuk hari ini.'},{status:409});if(!test&&!inWindow(day.checkin_open_at,day.checkin_close_at))return NextResponse.json({message:'Waktu presensi belum dibuka atau sudah ditutup.'},{status:409});const {data:existing}=await db.from('attendance_records').select('*').eq('registration_id',reg.id).eq('event_day_id',day.id).eq('attendance_type','checkin').maybeSingle();if(existing)return NextResponse.json({ok:true,already:true,registration:payload(reg,day,existing)});const now=new Date().toISOString();const {data,error}=await db.from('attendance_records').insert({registration_id:reg.id,event_day_id:day.id,attendance_type:'checkin',channel:'offline_qr',occurred_at:now,operator_email:auth.user.email,notes:test?'Akun uji / dummy':null}).select('*').single();if(error)return NextResponse.json({message:'Gagal menyimpan presensi.'},{status:500});await logActivity({registrationId:reg.id,actorType:'admin',actorEmail:auth.user.email,action:'day_h_offline_checkin',metadata:{event_day_id:day.id,test_account:test}});return NextResponse.json({ok:true,registration:payload(reg,day,data)})}
