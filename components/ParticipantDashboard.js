@@ -5,6 +5,7 @@ import { getSupabaseBrowser } from '../lib/supabase-browser';
 import { fileMeta, parseApiResponse, uploadSignedFiles } from '../lib/direct-upload-client';
 import ParticipantProfile from './ParticipantProfile';
 import AssessmentParticipantPanel from './AssessmentParticipantPanel';
+import { ParticipantSidebar,ParticipantTopbar,ParticipantTabbar,navMarkers } from './ParticipantNav';
 
 const statusLabel={incomplete:'Perlu dilengkapi',pending:'Menunggu verifikasi',valid:'Valid',rejected:'Perlu perbaikan',verified:'Terverifikasi'};
 function statusClass(v){return ['valid','verified'].includes(v)?'status-ok':v==='rejected'?'status-bad':'status-pending'}
@@ -15,18 +16,19 @@ export default function ParticipantDashboard(){
   const [data,setData]=useState(null),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[type,setType]=useState('');
   const [tab,setTab]=useState('registration'),[announcements,setAnnouncements]=useState([]),[unreadCount,setUnreadCount]=useState(0),[selectedAnnouncement,setSelectedAnnouncement]=useState(null);
   const [eventAccess,setEventAccess]=useState(null),[accessLoading,setAccessLoading]=useState(false),[dayH,setDayH]=useState(null),[dayHLoading,setDayHLoading]=useState(false),[assessments,setAssessments]=useState({}),[assessmentLoading,setAssessmentLoading]=useState({}),[billingModal,setBillingModal]=useState(null),[master,setMaster]=useState({practice_type:[],participant_type:[]});
-  const [participantNavCollapsed,setParticipantNavCollapsed]=useState(false),[participantMobileNavOpen,setParticipantMobileNavOpen]=useState(false);
+  const [participantNavCollapsed,setParticipantNavCollapsed]=useState(false),[participantMobileNavOpen,setParticipantMobileNavOpen]=useState(false),[navSummary,setNavSummary]=useState(null);
   const billingCache=useRef(new Map());
   async function token(){const {data}=await getSupabaseBrowser().auth.getSession();return data.session?.access_token||''}
   async function loadAnnouncements(){const t=await token();if(!t)return;const r=await fetch('/api/me/announcements',{headers:{Authorization:`Bearer ${t}`}});const j=await r.json();if(r.ok){setAnnouncements(j.announcements||[]);setUnreadCount(j.unreadCount||0)}}
+  async function loadSummary(){try{const t=await token();if(!t)return;const r=await fetch('/api/me/summary',{headers:{Authorization:`Bearer ${t}`},cache:'no-store'});if(r.ok)setNavSummary(await r.json())}catch{}}
   async function loadDayH(){const t=await token();if(!t)return;setDayHLoading(true);const r=await fetch('/api/me/day-h',{headers:{Authorization:`Bearer ${t}`},cache:'no-store'});const j=await r.json().catch(()=>({}));if(r.ok)setDayH(j);setDayHLoading(false)}
   async function loadAssessment(kind){const t=await token();if(!t)return;setAssessmentLoading(v=>({...v,[kind]:true}));try{const r=await fetch(`/api/me/${kind}`,{headers:{Authorization:`Bearer ${t}`},cache:'no-store'});const j=await r.json().catch(()=>({}));if(r.ok)setAssessments(v=>({...v,[kind]:j}));else setError(j.message||'Data assessment gagal dimuat.')}catch{setError('Koneksi bermasalah. Coba muat ulang.')}finally{setAssessmentLoading(v=>({...v,[kind]:false}))}}
   function loadTabData(next){if(next==='attendance')loadDayH();if(['pretest','evaluation','posttest'].includes(next))loadAssessment(next);if(next==='access')loadEventAccess()}
   async function loadEventAccess(){const t=await token();if(!t)return;setAccessLoading(true);const r=await fetch('/api/me/event-access',{headers:{Authorization:`Bearer ${t}`},cache:'no-store'});const j=await r.json().catch(()=>({}));if(r.ok)setEventAccess(j);setAccessLoading(false)}
-  async function load(){const t=await token();if(!t){location.href='/login';return}const [r,m]=await Promise.all([fetch('/api/me/registrations',{headers:{Authorization:`Bearer ${t}`}}),fetch('/api/master-data').catch(()=>null)]);const j=await r.json();if(!r.ok)setError(j.message);else{setData(j.registration);setType(j.registration?.participant_type||'')}if(m?.ok){const mj=await m.json();setMaster(mj.options||{})}await Promise.all([loadAnnouncements(),loadEventAccess()])}
+  async function load(){const t=await token();if(!t){location.href='/login';return}const [r,m]=await Promise.all([fetch('/api/me/registrations',{headers:{Authorization:`Bearer ${t}`}}),fetch('/api/master-data').catch(()=>null)]);const j=await r.json();if(!r.ok)setError(j.message);else{setData(j.registration);setType(j.registration?.participant_type||'')}if(m?.ok){const mj=await m.json();setMaster(mj.options||{})}await Promise.all([loadAnnouncements(),loadEventAccess(),loadSummary()])}
   useEffect(()=>{const requested=new URLSearchParams(location.search).get('tab');if(['profile','announcements','attendance','pretest','evaluation','posttest','access'].includes(requested)){setTab(requested);loadTabData(requested)}setParticipantNavCollapsed(localStorage.getItem('aptfi-participant-sidebar-collapsed')==='1');load();return()=>{for(const item of billingCache.current.values()){if(item?.url)URL.revokeObjectURL(item.url)}}},[]);
   useEffect(()=>{if(!participantMobileNavOpen)return;const previous=document.body.style.overflow;document.body.style.overflow='hidden';const closeOnEscape=e=>{if(e.key==='Escape')setParticipantMobileNavOpen(false)};window.addEventListener('keydown',closeOnEscape);return()=>{document.body.style.overflow=previous;window.removeEventListener('keydown',closeOnEscape)}},[participantMobileNavOpen]);
-  function selectParticipantTab(next){setTab(next);setParticipantMobileNavOpen(false);loadTabData(next)}
+  function selectParticipantTab(next){setTab(next);setParticipantMobileNavOpen(false);loadTabData(next);loadSummary();try{window.scrollTo({top:0,behavior:'smooth'})}catch{}}
   async function complete(e){
     e.preventDefault();
     const form=e.currentTarget;
@@ -84,11 +86,10 @@ export default function ParticipantDashboard(){
   const paymentCaption=isTest?'Disimulasikan untuk akun uji':paymentMissing?'Bukti transfer belum diunggah':'Bukti transfer';
   const finalCaption=isTest?'Akun siap untuk simulasi':'Konfirmasi akhir peserta';
 
-  return <main className="participant-page participant-page-with-sidebar"><div className={`participant-layout ${participantNavCollapsed?'participant-nav-collapsed':''}`}>
-    {participantMobileNavOpen&&<button type="button" className="participant-sidebar-backdrop" onClick={()=>setParticipantMobileNavOpen(false)} aria-label="Tutup menu peserta"/>}
-    <aside className={`participant-sidebar ${participantMobileNavOpen?'mobile-open':''}`} aria-label="Menu peserta"><div className="participant-sidebar-brand"><img src="/aptfi-logo.png" alt="APTFI"/><button type="button" className="participant-sidebar-collapse" onClick={()=>setParticipantNavCollapsed(v=>{const n=!v;localStorage.setItem('aptfi-participant-sidebar-collapsed',n?'1':'0');return n})} aria-label={participantNavCollapsed?'Perlebar sidebar':'Perkecil sidebar'}>{participantNavCollapsed?'›':'‹'}</button><button type="button" className="participant-sidebar-close" onClick={()=>setParticipantMobileNavOpen(false)} aria-label="Tutup menu">×</button></div><nav><button className={tab==='registration'?'active':''} onClick={()=>selectParticipantTab('registration')}><span>⌂</span><b>Pendaftaran</b></button><button className={tab==='profile'?'active':''} onClick={()=>selectParticipantTab('profile')}><span>◎</span><b>Profil Saya</b></button><button className={tab==='attendance'?'active':''} onClick={()=>selectParticipantTab('attendance')}><span>✓</span><b>Kehadiran</b></button><button className={tab==='pretest'?'active':''} onClick={()=>selectParticipantTab('pretest')}><span>✎</span><b>Pretest</b></button><button className={tab==='evaluation'?'active':''} onClick={()=>selectParticipantTab('evaluation')}><span>★</span><b>Evaluasi</b></button><button className={tab==='posttest'?'active':''} onClick={()=>selectParticipantTab('posttest')}><span>◆</span><b>Posttest</b></button><button className={tab==='access'?'active':''} onClick={()=>selectParticipantTab('access')}><span>▶</span><b>Akses Acara</b></button><button className={tab==='announcements'?'active':''} onClick={()=>selectParticipantTab('announcements')}><span>!</span><b>Pengumuman {unreadCount>0&&<em>{unreadCount}</em>}</b></button><button type="button" className="participant-sidebar-logout" onClick={logout}><span>↪</span><b>Keluar</b></button></nav></aside>
+  return <main className="participant-page participant-page-with-sidebar app-shell-page"><div className={`app-shell ${participantNavCollapsed?'collapsed':''}`}>
+    <ParticipantSidebar tab={tab} select={selectParticipantTab} data={data} summary={navSummary} markers={navMarkers(data,navSummary)} unreadCount={unreadCount} collapsed={participantNavCollapsed} toggleCollapsed={()=>setParticipantNavCollapsed(v=>{const n=!v;localStorage.setItem('aptfi-participant-sidebar-collapsed',n?'1':'0');return n})} open={participantMobileNavOpen} close={()=>setParticipantMobileNavOpen(false)} logout={logout}/>
     <div className="participant-shell participant-shell-sidebar">
-    <header className="participant-header"><a href="/" className="participant-brand"><img src="/aptfi-logo.png" alt="APTFI"/></a><button type="button" className="participant-mobile-menu-button" onClick={()=>setParticipantMobileNavOpen(true)} aria-label="Buka menu peserta" aria-expanded={participantMobileNavOpen}>☰</button></header>
+    <ParticipantTopbar tab={tab} unreadCount={unreadCount} openAnnouncements={()=>selectParticipantTab('announcements')}/>
     <div className="participant-welcome"><span>Halo,</span><h1>{data.full_name}</h1></div>
     <FeedbackBridge notice={notice} error={error} onNotice={()=>setNotice('')}/>{isTest&&<div className="alert alert-info"><strong>Mode Akun Uji.</strong> Akun ini tidak masuk kuota, statistik, atau laporan resmi.</div>}
 
@@ -112,7 +113,7 @@ export default function ParticipantDashboard(){
     </>}
     <footer className="participant-footer"><span>APTFI · Pelatihan Preseptor 2026</span><a href="/">Beranda</a></footer>
     {billingModal&&<ParticipantBillingModal modal={billingModal} registrationCode={data.registration_code} onClose={()=>setBillingModal(null)}/>}
-  </div></div></main>
+  </div></div><ParticipantTabbar tab={tab} select={selectParticipantTab} openMenu={()=>setParticipantMobileNavOpen(true)} unreadCount={unreadCount} markers={navMarkers(data,navSummary)}/></main>
 }
 
 

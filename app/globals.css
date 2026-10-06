@@ -928,3 +928,156 @@ h1,h2,h3,h4,.brand,.btn,.status,.eyebrow{font-family:var(--font-lato),Lato,Arial
   .asm-stats strong,.refund-stats strong{font-size:25px}
   .participant-footer{justify-content:center;justify-items:center;gap:6px}
 }
+
+/* ==========================================================================
+   v0.7.3 — Navigasi & identitas: lambang APTFI, sidebar admin & peserta,
+   drawer + topbar HP, tombol bawah peserta. Satu gaya untuk kedua sisi.
+   ========================================================================== */
+
+/* ---------- Lambang ---------- */
+.brand-lockup{display:flex;align-items:center;gap:11px;min-width:0}
+.brand-badge{flex:0 0 42px;width:42px;height:42px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 0 0 3px rgba(255,255,255,.14)}
+.brand-badge img{width:34px;height:34px;object-fit:contain;display:block}
+.brand-lockup.size-sm .brand-badge{flex-basis:34px;width:34px;height:34px;box-shadow:0 0 0 1px var(--line)}
+.brand-lockup.size-sm .brand-badge img{width:27px;height:27px}
+.brand-text{min-width:0;display:block}
+.brand-text b{display:block;color:#fff;font-size:15px;line-height:1.2;letter-spacing:.03em}
+.brand-text small{display:block;margin-top:2px;color:rgba(220,229,255,.72);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- Sidebar bersama ---------- */
+.app-sidebar{position:sticky;top:0;height:100vh;z-index:30;display:flex;flex-direction:column;min-width:0;padding:16px 12px;background:linear-gradient(180deg,#10174b 0%,#13277a 100%);color:#dce5ff}
+.side-brand{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 6px 16px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,.1)}
+.side-close{display:none;flex:0 0 auto;width:36px;height:36px;border:0;border-radius:11px;background:rgba(255,255,255,.1);color:#fff;place-items:center;cursor:pointer}
+.side-nav{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:grid;align-content:start;gap:2px;padding:2px 0 8px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent}
+.nav-item{position:relative;display:flex;align-items:center;gap:11px;width:100%;margin:0;border:0;border-radius:11px;background:transparent;padding:9px 10px;color:#dce5ff;font:inherit;font-size:13px;font-weight:700;text-align:left;cursor:pointer;transition:background .15s,color .15s}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item:focus-visible{outline:2px solid #9dbcf3;outline-offset:1px}
+.nav-item.active{background:#fff;color:#11185d;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.nav-item .nav-svg{flex:0 0 auto}
+.nav-text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-badge{flex:0 0 auto;min-width:20px;height:20px;padding:0 6px;border-radius:999px;display:grid;place-items:center;background:#f0b44c;color:#2b1a00;font-size:11px;font-weight:900;line-height:1}
+.nav-badge.danger{background:#ef4444;color:#fff}
+.nav-caret{flex:0 0 auto;opacity:.6;transition:transform .2s ease}
+.nav-group.open>.nav-group-head .nav-caret{transform:rotate(180deg)}
+.nav-group.has-active>.nav-group-head{color:#fff}
+.nav-sub{display:none;margin:2px 0 6px 19px;padding-left:10px;border-left:1px solid rgba(255,255,255,.14)}
+.nav-group.open>.nav-sub{display:grid;gap:1px}
+.nav-item.sub{padding:7px 10px;font-size:12.5px;font-weight:650}
+.nav-ext{opacity:.55}
+.nav-section{margin:14px 10px 6px;font-size:10px;font-weight:850;letter-spacing:.12em;text-transform:uppercase;color:rgba(220,229,255,.5)}
+.nav-mark{flex:0 0 auto}
+.nav-mark.done{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#22c55e;color:#fff;font-size:10px;font-weight:900}
+.nav-mark.todo{width:9px;height:9px;margin-right:5px;border-radius:50%;background:#f0b44c;box-shadow:0 0 0 3px rgba(240,180,76,.25)}
+.nav-mark.wait{width:8px;height:8px;margin-right:5px;border-radius:50%;background:rgba(220,229,255,.45)}
+.nav-mark.lock{font-size:11px;opacity:.55}
+.nav-item.active .nav-mark.wait{background:#9aa8c7}
+.side-foot{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-top:8px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1)}
+.side-foot>*,.side-nav>*{min-width:0}
+.side-profile{position:relative;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.07)}
+.side-avatar{flex:0 0 34px;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#fff;color:#11185d;font-weight:900}
+.side-profile-text{flex:1;min-width:0;display:block}
+.side-profile-text b{display:block;color:#fff;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-profile-text small{display:block;color:rgba(220,229,255,.7);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-chip{display:inline-block;margin-top:3px;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;font-size:10px;font-weight:800}
+.side-logout{flex:0 0 auto;display:grid;place-items:center;padding:7px;border:0;border-radius:9px;background:transparent;color:#dce5ff;opacity:.85;cursor:pointer}
+.side-logout:hover{opacity:1;background:rgba(255,255,255,.12)}
+.side-collapse{display:flex;align-items:center;justify-content:center;gap:6px;padding:6px;border:0;border-radius:9px;background:transparent;color:rgba(220,229,255,.7);font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.side-collapse:hover{color:#fff;background:rgba(255,255,255,.07)}
+.nav-backdrop{position:fixed;inset:0;z-index:110;border:0;padding:0;background:rgba(7,15,57,.45);backdrop-filter:blur(2px)}
+
+/* ---------- Topbar (HP) & tombol bawah peserta: tersembunyi di desktop ---------- */
+.nav-topbar,.tabbar{display:none}
+.topbar-title{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.topbar-title>div{min-width:0}
+.topbar-title b{display:block;color:#0b174f;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-title small{display:block;color:var(--muted);font-size:11px}
+.topbar-btn{position:relative;flex:0 0 auto;width:40px;height:40px;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;background:#fff;color:#11185d;cursor:pointer}
+.topbar-btn.primary{background:#1857e8;border-color:#1857e8;color:#fff;box-shadow:0 6px 16px rgba(24,87,232,.28)}
+.topbar-dot{position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:#ef4444;border:2px solid #fff}
+
+/* ---------- Admin: tata letak ---------- */
+.admin-side{width:auto}
+
+/* ---------- Peserta: tata letak ---------- */
+.app-shell{width:min(100%,1440px);margin:0 auto;display:grid;grid-template-columns:240px minmax(0,1fr);gap:22px;align-items:start}
+.app-shell.collapsed{grid-template-columns:76px minmax(0,1fr)}
+.part-side{top:18px;height:calc(100vh - 36px);border-radius:22px;box-shadow:0 18px 40px rgba(16,23,75,.18)}
+
+/* ---------- Mode diciutkan (desktop) ---------- */
+@media(min-width:901px){
+  .admin-app.sidebar-collapsed .app-sidebar{padding:16px 10px}
+}
+@media(min-width:761px){
+  .app-shell.collapsed .app-sidebar{padding:16px 10px}
+}
+@media(min-width:901px){
+  .admin-app.sidebar-collapsed .app-sidebar :is(.brand-text,.nav-text,.nav-caret,.nav-section,.side-profile-text,.side-logout,.nav-ext){display:none}
+  .admin-app.sidebar-collapsed .app-sidebar .side-brand{justify-content:center;padding:2px 0 16px}
+  .admin-app.sidebar-collapsed .app-sidebar .nav-item{justify-content:center;padding:11px 0}
+  .admin-app.sidebar-collapsed .app-sidebar .nav-sub{display:none!important}
+  .admin-app.sidebar-collapsed .app-sidebar .nav-badge{position:absolute;top:2px;right:4px;min-width:16px;height:16px;padding:0 4px;font-size:9px}
+  .admin-app.sidebar-collapsed .app-sidebar .side-profile{justify-content:center;padding:6px 0;background:transparent}
+  .admin-app.sidebar-collapsed .app-sidebar,.admin-app.sidebar-collapsed .app-sidebar .side-nav{overflow:visible}
+  .admin-app.sidebar-collapsed .app-sidebar :is(.nav-item,.side-profile):hover::after{content:attr(data-tip);position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);z-index:60;padding:7px 10px;border-radius:9px;background:#0b1240;color:#fff;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 10px 24px rgba(0,0,0,.25);pointer-events:none}
+}
+@media(min-width:761px){
+  .app-shell.collapsed .app-sidebar :is(.brand-text,.nav-text,.nav-section,.side-profile-text,.side-logout,.side-chip){display:none}
+  .app-shell.collapsed .app-sidebar .side-brand{justify-content:center;padding:2px 0 16px}
+  .app-shell.collapsed .app-sidebar .nav-item{justify-content:center;padding:11px 0}
+  .app-shell.collapsed .app-sidebar .nav-badge{position:absolute;top:2px;right:4px;min-width:16px;height:16px;padding:0 4px;font-size:9px}
+  .app-shell.collapsed .app-sidebar .nav-mark{position:absolute;top:5px;right:7px;margin:0}
+  .app-shell.collapsed .app-sidebar .nav-mark.done{width:14px;height:14px;font-size:8px}
+  .app-shell.collapsed .app-sidebar .side-profile{justify-content:center;padding:6px 0;background:transparent}
+  .app-shell.collapsed .app-sidebar,.app-shell.collapsed .app-sidebar .side-nav{overflow:visible}
+  .app-shell.collapsed .app-sidebar :is(.nav-item,.side-profile):hover::after{content:attr(data-tip);position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);z-index:60;padding:7px 10px;border-radius:9px;background:#0b1240;color:#fff;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 10px 24px rgba(0,0,0,.25);pointer-events:none}
+}
+
+/* ---------- Admin HP: topbar + drawer ---------- */
+@media(max-width:900px){
+  .admin-topbar{display:flex;position:sticky;top:0;z-index:40;align-items:center;gap:10px;padding:10px 14px;background:rgba(244,247,252,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .admin-side{position:fixed;top:0;left:0;bottom:0;width:min(86vw,300px);height:auto;border-radius:0 22px 22px 0;transform:translateX(-105%);visibility:hidden;transition:transform .22s ease,visibility .22s;z-index:120;box-shadow:12px 0 40px rgba(7,15,57,.3)}
+  .admin-side.open{transform:none;visibility:visible}
+  .admin-side .side-close{display:grid}
+  .admin-side .side-collapse{display:none}
+  .admin-app .admin-header{display:none}
+  .admin-app .admin-main{padding-top:16px}
+}
+
+/* ---------- Peserta HP: topbar, drawer, tombol bawah ---------- */
+@media(max-width:760px){
+  .app-shell,.app-shell.collapsed{display:block}
+  .part-side{position:fixed;top:0;left:0;bottom:0;width:min(86vw,300px);height:auto;border-radius:0 22px 22px 0;transform:translateX(-105%);visibility:hidden;transition:transform .22s ease,visibility .22s;z-index:120}
+  .part-side.open{transform:none;visibility:visible}
+  .part-side .side-close{display:grid}
+  .part-side .side-collapse{display:none}
+  .part-topbar{display:flex;position:sticky;top:0;z-index:40;align-items:center;gap:10px;margin:-12px calc(50% - 50vw) 14px;padding:10px 16px;background:rgba(244,248,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .participant-page-with-sidebar{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
+  .participant-welcome{margin-top:4px}
+  .tabbar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:90;padding:6px 4px calc(8px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(13,38,87,.07)}
+  .tab-btn{position:relative;display:grid;justify-items:center;gap:3px;padding:6px 0 2px;border:0;background:transparent;color:#7a88a6;font:inherit;font-size:10.5px;font-weight:800;cursor:pointer}
+  .tab-btn.active{color:#1857e8}
+  .tab-btn.active::before{content:"";position:absolute;top:-6px;width:28px;height:3px;border-radius:0 0 3px 3px;background:#1857e8}
+  .tab-icon{position:relative;display:grid}
+  .tab-dot{position:absolute;top:-1px;right:-3px;width:9px;height:9px;border-radius:50%;background:#f0b44c;border:2px solid #fff}
+  .tab-badge{position:absolute;top:-6px;right:-10px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;display:grid;place-items:center;background:#ef4444;color:#fff;font-size:9px;font-weight:900;border:2px solid #fff}
+  .sheet-backdrop{position:fixed;inset:0;z-index:95;border:0;padding:0;background:rgba(7,15,57,.35)}
+  .tab-sheet{position:fixed;left:10px;right:10px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:96;display:grid;gap:7px;padding:10px 12px 12px;border-radius:20px;background:#fff;box-shadow:0 20px 50px rgba(13,38,87,.25);animation:tab-sheet-in .18s ease-out}
+  .tab-sheet-grip{width:40px;height:4px;margin:2px auto 4px;border-radius:4px;background:#dce6f5}
+  .tab-sheet>strong{padding:0 4px 2px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#71809e}
+  .sheet-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid #e3eaf6;border-radius:14px;background:#fbfcff;color:#0b174f;font:inherit;text-align:left;cursor:pointer}
+  .sheet-item.active{border-color:#1857e8;background:#eef4ff}
+  .sheet-icon{flex:0 0 36px;width:36px;height:36px;display:grid;place-items:center;border-radius:11px;background:#eef4ff;color:#1857e8}
+  .sheet-text{flex:1;min-width:0}
+  .sheet-text b{display:block;font-size:14px}
+  .sheet-text small{display:block;margin-top:1px;color:var(--muted);font-size:12px}
+  .tab-sheet .nav-mark.wait{background:#c3cde0}
+  .tab-sheet .nav-mark.lock{opacity:.7}
+  /* elemen melayang lain naik di atas tombol bawah */
+  body:has(.tabbar) .support-whatsapp{bottom:calc(84px + env(safe-area-inset-bottom))}
+  body:has(.tabbar) .ui-toasts{bottom:calc(142px + env(safe-area-inset-bottom))}
+  body:has(.tabbar) .aq-actions.sticky{bottom:calc(76px + env(safe-area-inset-bottom))}
+}
+@keyframes tab-sheet-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.admin-side,.part-side,.tab-sheet{transition:none;animation:none}}
+/* sticky topbar/sidebar butuh pembungkus yang bukan scroll container */
+.participant-page-with-sidebar{overflow-x:clip}

@@ -16,6 +16,9 @@ export const metadata={
   robots:{index:true,follow:true}
 };
 
+// v0.7.3 — warna bar browser HP mengikuti navy APTFI. Favicon dari app/icon.png & app/apple-icon.png.
+export const viewport={themeColor:'#11185d'};
+
 export default function RootLayout({children}){
   return <html lang="id"><body className={lato.variable}>{children}<SupportWhatsApp/><UiFeedbackHost/></body></html>;
 }
