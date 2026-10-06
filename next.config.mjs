@@ -13,6 +13,11 @@ const nextConfig={
   poweredByHeader:false,
   reactStrictMode:true,
   experimental:{serverActions:{bodySizeLimit:'8mb'}},
-  async headers(){return [{source:'/(.*)',headers:securityHeaders}]}
+  // v0.8.2: kamera hanya diizinkan di halaman scanner panitia (/admin/checkin).
+  // Entri kedua menimpa Permissions-Policy dari entri pertama untuk path tersebut.
+  async headers(){return [
+    {source:'/(.*)',headers:securityHeaders},
+    {source:'/admin/checkin',headers:[{key:'Permissions-Policy',value:'camera=(self), microphone=(), geolocation=(), payment=(), usb=()'}]}
+  ]}
 };
 export default nextConfig;

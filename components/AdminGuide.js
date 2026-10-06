@@ -19,10 +19,10 @@ export const EVENT_FLOW=[
     {title:'Publikasikan akses acara',copy:'Isi dan publikasikan link Zoom (Online) serta info lokasi: nama tempat, alamat, kontak (Offline). QR presensi Offline tidak diatur di sini: QR ada di menu Kehadiran peserta dan muncul otomatis saat jam presensi.',to:'access',cta:'Akses Acara'},
     {title:'Unggah virtual background & materi',copy:'Unggah virtual background Zoom (1920 × 1080 px) dan materi yang sudah ada. Materi dari pemateri dapat menyusul.',to:'assets',cta:'Materi & Background'},
     {title:'Kirim pengumuman ke peserta',copy:'Bagikan jadwal, cara presensi (Online: tombol Check-in; Offline: tunjukkan QR di menu Kehadiran), dan pengingat Pretest.',to:'announcements',cta:'Pengumuman'},
-    {title:'Siapkan HP panitia scanner',copy:'Login sekali di /admin/login memakai browser bawaan HP (Chrome/Safari), bukan dari dalam WhatsApp. Semua akun panitia bisa Scan QR.',to:'scan',cta:'Scan QR'}
+    {title:'Siapkan HP panitia scanner',copy:'Login sekali di /admin/login memakai browser bawaan HP (Chrome/Safari), bukan dari dalam WhatsApp. Buka Scan QR → Buka kamera → izinkan kamera, lalu uji dengan QR Akun Uji Offline. Semua akun panitia bisa Scan QR.',to:'scan',cta:'Scan QR'}
   ]},
   {id:'day1',chip:'Hari 1 · Rabu 7 Okt',title:'Presensi & Pretest',lead:'Fokus: semua peserta tercatat hadir, lalu mengerjakan Pretest.',steps:[
-    {time:'07.00–09.00',title:'Presensi Hari 1',copy:'Offline: pindai QR peserta di meja registrasi. Online: peserta menekan Check-in di menu Kehadiran. Pantau angka hadir/belum hadir di Command Center.',to:'dayh',cta:'Command Center'},
+    {time:'07.00–09.00',title:'Presensi Hari 1',copy:'Offline: di halaman Scan QR tekan Buka kamera, lalu pindai QR peserta satu per satu (presensi langsung tercatat). Online: peserta menekan Check-in di menu Kehadiran. Pantau angka hadir/belum hadir di Command Center.',to:'dayh',cta:'Command Center'},
     {time:'Sepanjang presensi',title:'Tangani kendala presensi',copy:'Peserta yang gagal presensi (sinyal, HP mati, QR tidak terbaca) dicatat lewat Check-in manual oleh Super Admin dengan alasan. Jam tutup bisa diperpanjang di Command Center.',to:'dayh',cta:'Check-in manual'},
     {time:'08.00–10.00',title:'Pretest',copy:'Sesuai rundown, Pretest dikerjakan pukul 08.45–09.00. Peserta wajib sudah presensi Hari 1. Pantau jumlah yang selesai di tab Hasil.',to:'pretest',cta:'Hasil Pretest'},
     {time:'Setelah sesi',title:'Unggah materi pemateri',copy:'Unggah materi Topik 1–4 begitu diterima dari pemateri. Materi langsung muncul di dashboard peserta.',to:'assets',cta:'Materi'}
@@ -45,7 +45,7 @@ export const EVENT_FLOW=[
 const ISSUES=[
   ['Peserta lupa / gagal presensi','Super Admin melakukan Check-in manual di Command Center dengan alasan. Jangan membuat akun baru.'],
   ['Peserta Offline tidak menemukan QR','QR presensi hanya ada di menu Kehadiran (bukan Akses Acara) dan muncul otomatis saat jam presensi dibuka. Minta peserta membuka Kehadiran lalu menekan Perbarui.'],
-  ['QR tidak bisa dipindai','Pastikan HP scanner sudah login panitia. Bila kamera bermasalah, salin token/URL QR ke kolom input di halaman Scan QR.'],
+  ['QR tidak bisa dipindai','Di halaman Scan QR tekan Buka kamera (izinkan akses kamera). Naikkan kecerahan layar HP peserta, coba Ganti kamera, atau pakai aplikasi kamera HP. Bila tetap gagal, salin token/URL QR ke kolom Input manual.'],
   ['Pretest / Posttest tidak bisa dibuka','Cek tiga hal: peserta sudah presensi hari yang disyaratkan, modul aktif, dan jam sedang di dalam jadwal.'],
   ['Nama di sertifikat salah','Peserta memperbaiki nama & gelar di Profil Saya, lalu mengunduh ulang. Nama mengikuti data terbaru setiap kali diunduh.'],
   ['Sertifikat terbit untuk orang yang salah','Cabut sertifikat dengan alasan. Halaman verifikasi otomatis menampilkan status dicabut.'],

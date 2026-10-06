@@ -1298,3 +1298,62 @@ h1,h2,h3,h4,.brand,.btn,.status,.eyebrow{font-family:var(--font-lato),Lato,Arial
 }
 .access-settings-grid{align-items:start}
 .access-setting-card{align-content:start}
+
+/* ===== v0.8.2 — Scanner kamera in-app (halaman Scan QR panitia) ===== */
+.checkin-camera{padding:18px;margin-bottom:16px;display:grid;gap:14px}
+.cam-frame{position:relative;width:min(100%,420px);margin:0 auto;aspect-ratio:1/1;border-radius:20px;overflow:hidden;background:#0b1240;box-shadow:0 18px 40px rgba(17,24,93,.25)}
+.cam-frame[hidden]{display:none}
+.cam-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.cam-overlay{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;background:radial-gradient(circle at center,transparent 0 46%,rgba(5,10,40,.45) 47%)}
+.cam-box{width:64%;aspect-ratio:1/1;border-radius:18px;box-shadow:0 0 0 3px rgba(255,255,255,.95),0 0 0 9999px rgba(5,10,40,.0);position:relative;animation:camPulse 1.6s ease-in-out infinite}
+.cam-overlay.paused .cam-box{animation:none;box-shadow:0 0 0 3px rgba(255,255,255,.45)}
+@keyframes camPulse{0%,100%{box-shadow:0 0 0 3px rgba(255,255,255,.95)}50%{box-shadow:0 0 0 3px rgba(96,165,250,.95)}}
+.cam-status{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);max-width:calc(100% - 28px);padding:7px 14px;border-radius:999px;background:rgba(17,24,93,.82);color:#fff;font-size:12px;font-weight:700;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cam-status.paused{background:rgba(120,53,15,.85)}
+.cam-start{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:14px;align-items:center}
+.cam-start-icon{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:#edf3ff;color:#1d4ed8}
+.cam-start strong{color:#11185d}
+.cam-start p{margin:3px 0 0;font-size:13px;color:var(--muted)}
+.cam-error{margin:0}
+.cam-controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.cam-auto{margin:0;font-size:13px}
+.cam-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.cam-buttons .btn{display:inline-flex;align-items:center;gap:6px}
+.checkin-result-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+.checkin-result-actions .btn-checkin{margin:0}
+.checkin-history{padding:16px 18px;margin:16px 0}
+.checkin-history-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.checkin-history-head strong{color:#11185d}
+.checkin-history ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.checkin-history li{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 11px;border-radius:11px;background:#f6f8fc;border:1px solid var(--line)}
+.checkin-history li strong{display:block;font-size:13px;color:#11185d;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.checkin-history li small{display:block;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.checkin-history li em{font-style:normal;font-size:11px;font-weight:800;text-align:right}
+.checkin-history li em small{font-weight:600}
+.hist-dot{width:10px;height:10px;border-radius:50%;background:#94a3b8}
+.hist-ok .hist-dot{background:#16a34a}.hist-ok em{color:#15803d}
+.hist-already .hist-dot{background:#f59e0b}.hist-already em{color:#b45309}
+.hist-blocked .hist-dot,.hist-error .hist-dot{background:#dc2626}.hist-blocked em,.hist-error em{color:#b91c1c}
+.checkin-manual-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:10px}
+.checkin-manual-head strong{color:#11185d}
+.checkin-manual-head small{color:var(--muted)}
+@media(max-width:760px){
+  .checkin-camera{padding:14px}
+  .cam-start{grid-template-columns:48px minmax(0,1fr)}
+  .cam-start .btn{grid-column:1/-1;width:100%}
+  .cam-start-icon{width:48px;height:48px}
+  .cam-controls{display:grid}
+  .cam-buttons{display:grid;grid-template-columns:1fr 1fr}
+  .cam-buttons .btn{justify-content:center}
+  .checkin-result-actions{display:grid}
+  .checkin-result-actions .btn{width:100%}
+}
+.cam-result{position:absolute;left:12px;right:12px;bottom:12px;display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px;align-items:center;padding:10px 12px;border-radius:14px;color:#fff;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.cam-result strong{display:block;font-size:15px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cam-result small{display:block;font-size:12px;opacity:.92;margin-top:2px}
+.cam-result-icon{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.22);font-weight:900;font-size:20px}
+.cam-ok{background:rgba(21,128,61,.94)}
+.cam-already{background:rgba(180,83,9,.94)}
+.cam-pending{background:rgba(29,78,216,.94)}
+.cam-blocked,.cam-error,.cam-invalid{background:rgba(185,28,28,.94)}
+@media(max-width:760px){.cam-frame{aspect-ratio:4/3}}
