@@ -1,4 +1,5 @@
 'use client';
+import FeedbackBridge from './FeedbackBridge';
 import { useEffect,useState } from 'react';
 import { getSupabaseBrowser } from '../lib/supabase-browser';
 import ActionDialog from './ActionDialog';
@@ -35,8 +36,7 @@ export default function TestParticipantsAdmin(){
   return <section className="admin-grid-team">
     <form className="panel" onSubmit={create}>
       <div className="panel-head"><div><h2>Buat akun uji peserta</h2><p>Tidak memakai kuota, statistik, atau export resmi.</p></div></div>
-      {error&&<div className="alert alert-error">{error}</div>}
-      {notice&&<div className="alert alert-success">{notice}</div>}
+      <FeedbackBridge notice={notice} error={error} onNotice={()=>setNotice('')}/>
       <div className="field"><label>Nama</label><input name="full_name" required placeholder="Dummy Peserta"/></div>
       <div className="field"><label>Email</label><input name="email" type="email" required/></div>
       <div className="field"><label>Mode simulasi</label><select name="attendance_mode" defaultValue="Online"><option>Online</option><option>Offline</option></select></div>

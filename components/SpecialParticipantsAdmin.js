@@ -1,4 +1,5 @@
 'use client';
+import FeedbackBridge from './FeedbackBridge';
 import { useEffect,useMemo,useState } from 'react';
 import { getSupabaseBrowser } from '../lib/supabase-browser';
 
@@ -27,7 +28,7 @@ export default function SpecialParticipantsAdmin({onChanged}){
 
   return <section className="special-participant-layout">
     <div className="panel special-participant-intro"><div><div className="eyebrow brand-blue">Pendaftaran Terbatas</div><h2>Peserta Khusus</h2><p>Tambahkan peserta yang memang diberi slot khusus tanpa membuka kembali form publik. Peserta langsung berstatus aktif dan memakai kuota mode yang dipilih.</p></div><div className="special-safe-note"><strong>Form publik tetap tertutup</strong><span>Peserta menerima email petunjuk akun, membuat password melalui Lupa Password, lalu memilih Homebase dan melengkapi profil serta dokumen dari Dashboard Peserta.</span></div></div>
-    {error&&<div className="alert alert-error">{error}</div>}{notice&&<div className="alert alert-success">{notice}</div>}
+    <FeedbackBridge notice={notice} error={error} onNotice={()=>setNotice('')}/>
     <div className="special-participant-grid">
       <form className="panel" onSubmit={manualSubmit}>
         <div className="panel-head"><div><h2>Tambah satu peserta</h2><p>Untuk kasus tambahan individual.</p></div></div>

@@ -1,4 +1,5 @@
 'use client';
+import FeedbackBridge from './FeedbackBridge';
 
 import { useEffect,useMemo,useState } from 'react';
 import { getSupabaseBrowser } from '../lib/supabase-browser';
@@ -106,8 +107,7 @@ export default function RefundManagement(){
   const batchAmount=batchSelection.reduce((sum,x)=>sum+Number(x.approved_amount||x.requested_amount||0),0);
 
   return <div className="refund-admin">
-    {error&&<div className="alert alert-error">{error}</div>}
-    {notice&&<div className="alert alert-success">{notice}</div>}
+    <FeedbackBridge notice={notice} error={error} onNotice={()=>setNotice('')}/>
 
     <div className="refund-stats"><article><span>Menunggu review</span><strong>{stats.review}</strong></article><article><span>Siap diproses</span><strong>{stats.ready}</strong><small>{money(stats.readyAmount)}</small></article><article><span>Dalam batch</span><strong>{stats.processing}</strong></article><article><span>Selesai</span><strong>{stats.done}</strong></article></div>
 
@@ -118,7 +118,7 @@ export default function RefundManagement(){
 
     <section className="panel refund-batch-panel">
       <div className="panel-head"><div><h2>Batch Refund</h2><p>Export Excel digunakan sebagai daftar transfer massal dan rekonsiliasi.</p></div></div>
-      <div className="refund-batches">{batches.length===0?<div className="empty-state compact"><h3>Belum ada batch</h3></div>:batches.map(b=><article key={b.id}><div><strong>{b.batch_code}</strong><small>{b.total_items} peserta · {money(b.total_amount)} · dibuat {dt(b.created_at)}</small></div><span className={`status ${b.status==='completed'?'status-ok':b.status==='cancelled'?'status-bad':'status-pending'}`}>{b.status}</span><button className="btn btn-secondary btn-small" onClick={()=>exportBatch(b)}>Export Excel</button>{b.status==='processing'&&<><button className="btn btn-brand-primary btn-small" onClick={()=>setDialog({type:'complete-batch',batch:b,reference:b.batch_code})} disabled={busy}>Tandai Selesai</button><button className="btn btn-danger btn-small" onClick={()=>setDialog({type:'cancel-batch',batch:b})} disabled={busy}>Batalkan Batch</button></>}</article>)}</div>
+      <div className="refund-batches">{batches.length===0?<div className="empty-state compact"><h3>Belum ada batch</h3></div>:batches.map(b=><article key={b.id}><div><strong>{b.batch_code}</strong><small>{b.total_items} peserta · {money(b.total_amount)} · dibuat {dt(b.created_at)}</small></div><span className={`status ${b.status==='completed'?'status-ok':b.status==='cancelled'?'status-bad':'status-pending'}`}>{({draft:'Draft',processing:'Diproses',completed:'Selesai',cancelled:'Dibatalkan'})[b.status]||b.status}</span><button className="btn btn-secondary btn-small" onClick={()=>exportBatch(b)}>Export Excel</button>{b.status==='processing'&&<><button className="btn btn-brand-primary btn-small" onClick={()=>setDialog({type:'complete-batch',batch:b,reference:b.batch_code})} disabled={busy}>Tandai Selesai</button><button className="btn btn-danger btn-small" onClick={()=>setDialog({type:'cancel-batch',batch:b})} disabled={busy}>Batalkan Batch</button></>}</article>)}</div>
     </section>
 
     <ActionDialog open={dialog?.type==='ready'} title="Siapkan refund?" description="Tentukan nominal yang disetujui sebelum refund masuk antrean proses batch." tone="success" confirmLabel="Ya, siapkan refund" busy={busy} confirmDisabled={!Number.isFinite(Number(dialog?.amount))||Number(dialog?.amount)<0} onClose={()=>!busy&&setDialog(null)} onConfirm={()=>patchRefund(dialog.item,'ready',{amount:Number(dialog.amount),note:dialog.note||''})}>

@@ -2,6 +2,8 @@
 import { useEffect,useMemo,useState } from 'react';
 import writeExcelFile from 'write-excel-file/browser';
 import { getSupabaseBrowser } from '../lib/supabase-browser';
+import { confirmDialog } from '../lib/ui-feedback';
+import FeedbackBridge from './FeedbackBridge';
 
 // v0.7.1 — Admin Pretest / Posttest / Evaluasi (Super Admin), tampilan bertab.
 
@@ -92,22 +94,22 @@ export default function AssessmentAdmin({kind='pretest'}){
     if(kind==='posttest'){body.max_attempts=fd.get('max_attempts');body.pass_percent=fd.get('pass_percent')}
     run(()=>api(base,{method:'PATCH',body:JSON.stringify(body)}),`Pengaturan ${meta.label} disimpan.`);
   }
-  function loadBank(){
+  async function loadBank(){
     const extra=kind==='evaluation'?' dan daftar pemateri':'';
-    if(!confirm(`Muat bank soal standar APTFI untuk ${meta.label}? Semua soal${extra} yang ada sekarang akan diganti.`))return;
+    if(!await confirmDialog({title:'Muat bank soal standar?',description:`Semua soal${extra} ${meta.label} yang ada sekarang akan diganti dengan bank soal standar APTFI.`,confirmLabel:'Ya, muat bank soal'}))return;
     run(()=>post({action:'load_standard_bank'}),'Bank soal standar dimuat.');
   }
-  function resetTests(){if(!confirm(`Reset semua hasil ${meta.label} akun TEST?`))return;run(()=>post({action:'reset_test_attempts'}),'Hasil akun TEST direset.')}
-  function resetAttempt(row){
+  async function resetTests(){if(!await confirmDialog({title:'Reset hasil akun TEST?',description:`Semua hasil ${meta.label} dari akun TEST akan dihapus. Hasil peserta resmi tidak terpengaruh.`,confirmLabel:'Ya, reset',tone:'danger'}))return;run(()=>post({action:'reset_test_attempts'}),'Hasil akun TEST direset.')}
+  async function resetAttempt(row){
     const what=kind==='posttest'?'semua attempt':'hasil';
-    if(!confirm(`Reset ${what} ${meta.label} ${row.full_name}? Peserta dapat mengerjakan ulang.`))return;
+    if(!await confirmDialog({title:`Reset ${meta.label} peserta?`,description:`${row.full_name}: ${what} ${meta.label} akan dihapus dan peserta dapat mengerjakan ulang.`,confirmLabel:'Ya, reset',tone:'danger'}))return;
     run(()=>post({action:'reset_attempt',registrationId:row.id}),`Hasil ${meta.label} direset.`);
   }
   function createQuestion(v){run(async()=>{await post({action:'create_question',...toPayload(v)});setShowAdd(false)},'Soal ditambahkan.')}
   function updateQuestion(question,v){run(async()=>{await post({action:'update_question',questionId:question.id,...toPayload(v)});setEditing(null)},'Soal diperbarui.')}
-  function deleteQuestion(question,index){if(!confirm(`Hapus soal nomor ${index+1}?`))return;run(()=>api(base,{method:'DELETE',body:JSON.stringify({questionId:question.id})}),'Soal dihapus.')}
+  async function deleteQuestion(question,index){if(!await confirmDialog({title:`Hapus soal nomor ${index+1}?`,description:question.question_text,confirmLabel:'Hapus soal',tone:'danger'}))return;run(()=>api(base,{method:'DELETE',body:JSON.stringify({questionId:question.id})}),'Soal dihapus.')}
   function saveTarget(target,v){run(()=>post({action:target?'update_target':'create_target',targetId:target?.id,...v}),target?'Pemateri diperbarui.':'Pemateri ditambahkan.')}
-  function deleteTarget(target){if(!confirm(`Hapus pemateri ${target.name}?`))return;run(()=>post({action:'delete_target',targetId:target.id}),'Pemateri dihapus.')}
+  async function deleteTarget(target){if(!await confirmDialog({title:'Hapus pemateri?',description:target.name,confirmLabel:'Hapus pemateri',tone:'danger'}))return;run(()=>post({action:'delete_target',targetId:target.id}),'Pemateri dihapus.')}
 
   async function exportFile(mode){
     try{
@@ -137,8 +139,7 @@ export default function AssessmentAdmin({kind='pretest'}){
   const tabs=[['results',isEval?'Rekap & Hasil':'Hasil'],['questions',isEval?'Soal & Pemateri':'Soal'],['settings','Pengaturan']];
 
   return <div className="asm">
-    {error&&<div className="alert alert-error">{error}</div>}
-    {notice&&<div className="alert alert-success">{notice}</div>}
+    <FeedbackBridge notice={notice} error={error} onNotice={()=>setNotice('')}/>
 
     <section className={`panel asm-status ${m.active?'on':''}`}>
       <div className="asm-status-main">
@@ -186,7 +187,7 @@ export default function AssessmentAdmin({kind='pretest'}){
             {isPost&&<button className="btn btn-secondary btn-small" onClick={()=>exportFile('attempts')} disabled={busy}>Export semua attempt</button>}
           </div>
         </div>
-        <div className="asm-search"><span>⌕</span><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Cari nama, nomor pendaftaran, atau email..."/></div>
+        <div className="search-box asm-search-box"><span>⌕</span><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Cari nama, nomor pendaftaran, atau email..."/></div>
         <div className="asm-table-wrap"><table className="asm-table">
           <thead><tr><th>Peserta</th><th>Mode</th><th>Status</th>{data.scored&&<th className="num">{isPost?'Terbaik':'Nilai'}</th>}{isPost&&<th className="num">Attempt</th>}<th>{isPost?'Terakhir':'Dikirim'}</th><th/></tr></thead>
           <tbody>

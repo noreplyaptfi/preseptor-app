@@ -1,4 +1,5 @@
 'use client';
+import FeedbackBridge from './FeedbackBridge';
 import { useEffect,useState } from 'react';
 import { getSupabaseBrowser } from '../lib/supabase-browser';
 import ActionDialog from './ActionDialog';
@@ -155,7 +156,7 @@ export default function CheckinPage(){
       {error}
       {forbidden&&<div style={{marginTop:10}}><button type="button" className="btn btn-secondary btn-small" onClick={switchAccount}>Masuk dengan akun panitia</button></div>}
     </div>}
-    {notice&&<div className="alert alert-success">{notice}</div>}
+    <FeedbackBridge notice={notice} onNotice={()=>setNotice('')}/>
 
     {loading&&<section className="checkin-result neutral"><div className="spinner"/><h2>Memeriksa peserta...</h2></section>}
 

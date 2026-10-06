@@ -750,9 +750,6 @@ h1,h2,h3,h4,.brand,.btn,.status,.eyebrow{font-family:var(--font-lato),Lato,Arial
 .asm-toolbar>div:first-child{min-width:0;flex:1 1 280px}
 .asm-toolbar p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
 .asm-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap}
-.asm-search{display:flex;align-items:center;gap:8px;padding:0 12px;margin-bottom:12px;border:1px solid #cbd5e1;border-radius:12px;background:#fff}
-.asm-search span{color:#8090ad}
-.asm-search input{flex:1;min-width:0;border:0;outline:0;padding:11px 0;font:inherit;background:transparent}
 .asm-table-wrap{overflow-x:auto;border:1px solid #e3eaf6;border-radius:14px}
 .asm-table{width:100%;border-collapse:collapse;font-size:13px}
 .asm-table th{padding:10px 12px;background:#f6f9ff;text-align:left;font-size:10px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:#71809e;white-space:nowrap}
@@ -843,4 +840,91 @@ h1,h2,h3,h4,.brand,.btn,.status,.eyebrow{font-family:var(--font-lato),Lato,Arial
   .asm-q-actions{grid-column:2;padding-top:0}
   .asm-toolbar-actions{width:100%}
   .asm-toolbar-actions .btn{flex:1 1 auto}
+}
+
+/* ==========================================================================
+   v0.7.2 — Standar UI: notifikasi, pencarian, tabel, kartu statistik, checkbox
+   Lapisan terakhir: menyeragamkan komponen yang sebelumnya bergaya berbeda.
+   ========================================================================== */
+
+/* ---------- Toast notifikasi (pengganti alert bawaan browser) ---------- */
+.ui-toasts{position:fixed;top:18px;right:18px;z-index:1000;display:grid;gap:10px;width:min(380px,calc(100vw - 32px));pointer-events:none}
+.ui-toast{pointer-events:auto;display:grid;grid-template-columns:30px minmax(0,1fr) 22px;gap:10px;align-items:start;padding:12px 12px 12px 14px;border-radius:14px;background:#fff;border:1px solid #dce6f5;border-left:4px solid #1857e8;box-shadow:0 16px 40px rgba(13,38,87,.18);animation:ui-toast-in .18s ease-out}
+.ui-toast.success{border-left-color:#16a34a}
+.ui-toast.error{border-left-color:#dc2626}
+.ui-toast.warning{border-left-color:#f59e0b}
+.ui-toast-icon{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:14px;font-weight:900;background:#eef4ff;color:#1857e8}
+.ui-toast.success .ui-toast-icon{background:#e9f8ee;color:#16813d}
+.ui-toast.error .ui-toast-icon{background:#fff0ef;color:#b42318}
+.ui-toast.warning .ui-toast-icon{background:#fff7e8;color:#9a4d05}
+.ui-toast-body{min-width:0;padding-top:4px}
+.ui-toast-body strong{display:block;font-size:13px;color:#0b174f;margin-bottom:2px}
+.ui-toast-body p{margin:0;font-size:13px;line-height:1.45;color:#24385f;overflow-wrap:anywhere}
+.ui-toast-close{border:0;background:transparent;padding:2px;font:inherit;font-size:19px;line-height:1;color:#8090ad;cursor:pointer;border-radius:6px}
+.ui-toast-close:hover{color:#24385f;background:#f1f5fb}
+@keyframes ui-toast-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.ui-toast{animation:none}}
+
+/* ---------- Pencarian ---------- */
+.search-box{position:relative;display:block;width:100%}
+.search-box>span{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#8090ad;font-size:15px;line-height:1;pointer-events:none}
+.search-box input{width:100%;min-height:44px;margin:0;border:1px solid #cbd5e1;border-radius:12px;padding:10px 13px 10px 38px;background:#fff;color:var(--text);font:inherit;font-size:14px;transition:border-color .15s,box-shadow .15s}
+.search-box input::placeholder{color:#94a3b8}
+.search-box input:focus{outline:none;border-color:#88aef0;box-shadow:0 0 0 4px rgba(24,87,232,.1)}
+.asm-search-box,.dayh-search,.homebase-search{margin-bottom:12px}
+
+/* ---------- Input yang sebelumnya tanpa gaya ---------- */
+.checkin-token-row input{width:100%;min-height:44px;border:1px solid #cbd5e1;border-radius:12px;padding:10px 13px;background:#fff;color:var(--text);font:inherit;font-size:14px}
+.checkin-token-row input:focus{outline:none;border-color:#88aef0;box-shadow:0 0 0 4px rgba(24,87,232,.1)}
+
+/* ---------- Tabel (satu gaya untuk semua tabel admin) ---------- */
+.table-wrap,.dayh-table-wrap,.refund-table-wrap,.asm-table-wrap{border:1px solid #e3eaf6;border-radius:14px;background:#fff}
+.dayh-table-wrap,.refund-table-wrap,.asm-table-wrap{overflow:auto}
+.table th,.dayh-table th,.refund-table th,.special-table th,.asm-table th{background:#f6f9ff;color:#71809e;font-size:10px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;text-align:left;white-space:nowrap;padding:10px 12px;border-bottom:1px solid #e3eaf6}
+.dayh-table td,.refund-table td,.special-table td,.asm-table td{padding:11px 12px;border-bottom:1px solid #edf1f8;font-size:13px;color:#24385f;vertical-align:middle}
+.table td{border-bottom-color:#edf1f8}
+.table tbody tr:last-child td,.dayh-table tbody tr:last-child td,.refund-table tbody tr:last-child td,.special-table tbody tr:last-child td,.asm-table tbody tr:last-child td{border-bottom:0}
+.table tbody tr:hover td,.dayh-table tbody tr:hover td,.refund-table tbody tr:hover td,.special-table tbody tr:hover td,.asm-table tbody tr:hover td{background:#fbfcff}
+.dayh-table td strong,.refund-table td strong,.special-table td strong,.asm-table td strong{color:#0b174f}
+.dayh-table td small,.refund-table td small,.special-table td small,.asm-table td small{color:var(--muted);font-size:11px;line-height:1.45}
+
+/* ---------- Kartu statistik (gaya .stat untuk semua) ---------- */
+.asm-stats>div,.refund-stats article{padding:18px;background:#fff;border:1px solid var(--line);border-radius:15px;display:block}
+.asm-stats span,.refund-stats span{display:block;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:0;text-transform:none}
+.asm-stats strong,.refund-stats strong{display:block;font-size:30px;line-height:1.15;letter-spacing:-.04em;margin:6px 0 3px;color:#0b174f}
+.refund-stats small{display:block;color:var(--muted);font-size:11px}
+.asm-stats .muted-stat{background:#f8fafd}
+.asm-stats .muted-stat strong{color:#657395}
+
+/* ---------- Checkbox seragam di seluruh aplikasi ---------- */
+:is(.admin-app,.participant-page,.checkin-page,.auth-page) input[type="checkbox"]{
+  appearance:none;-webkit-appearance:none;flex:0 0 auto;
+  width:20px;height:20px;min-width:20px;margin:0;
+  border:1.5px solid #aebbd0;border-radius:6px;background:#fff;cursor:pointer;
+  transition:border-color .15s,background-color .15s,box-shadow .15s;
+}
+:is(.admin-app,.participant-page,.checkin-page,.auth-page) input[type="checkbox"]:hover{border-color:#5f8ee6}
+:is(.admin-app,.participant-page,.checkin-page,.auth-page) input[type="checkbox"]:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(24,87,232,.12)}
+:is(.admin-app,.participant-page,.checkin-page,.auth-page) input[type="checkbox"]:checked{
+  border-color:#1857e8;background-color:#1857e8;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M3 7.2l2.3 2.3L11 4.2' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:center;background-size:14px 14px;
+}
+:is(.admin-app,.participant-page,.checkin-page,.auth-page) input[type="checkbox"]:disabled{cursor:not-allowed;opacity:.45;background-color:#edf1f6}
+
+/* ---------- Fokus keyboard yang konsisten ---------- */
+.btn:focus-visible,.link-button:focus-visible,.asm-tabs button:focus-visible,.aq-steps button:focus-visible{outline:3px solid rgba(24,87,232,.35);outline-offset:2px}
+
+/* ---------- Perbaikan tata letak ---------- */
+.admin-main{min-width:0}
+.dayh-workspace{grid-template-columns:minmax(0,1fr)}
+.dayh-workspace>*{min-width:0}
+
+@media(max-width:760px){
+  .ui-toasts{top:auto;bottom:calc(86px + env(safe-area-inset-bottom));left:50%;right:auto;transform:translateX(-50%)}
+  .dayh-grid{grid-template-columns:minmax(0,1fr)}
+  .refund-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .asm-stats>div,.refund-stats article{padding:14px}
+  .asm-stats strong,.refund-stats strong{font-size:25px}
+  .participant-footer{justify-content:center;justify-items:center;gap:6px}
 }

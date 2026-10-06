@@ -1,4 +1,5 @@
 'use client';
+import FeedbackBridge from './FeedbackBridge';
 
 import { useEffect,useMemo,useRef,useState } from 'react';
 import { getSupabaseBrowser } from '../lib/supabase-browser';
@@ -66,8 +67,7 @@ export default function SelfServiceRequestsAdmin({participants=[],onChanged}){
   const createParticipant=participants.find(p=>p.id===createDialog?.registrationId);
 
   return <div className="request-admin-layout">
-    {error&&<div className="alert alert-error request-admin-feedback">{error}</div>}
-    {notice&&<div className="alert alert-success request-admin-feedback">{notice}</div>}
+    <FeedbackBridge notice={notice} error={error} onNotice={()=>setNotice('')}/>
 
     <section className="panel request-admin-list">
       <div className="panel-head"><div><h2>Permintaan Peserta</h2><p>Review perubahan email, mode kehadiran, dan pengunduran diri.</p></div><select className="ui-select compact-select" value={filter} onChange={e=>setFilter(e.target.value)}><option value="pending">Menunggu review</option><option value="approved">Disetujui</option><option value="rejected">Ditolak</option><option value="cancelled">Dibatalkan</option><option value="all">Semua</option></select></div>

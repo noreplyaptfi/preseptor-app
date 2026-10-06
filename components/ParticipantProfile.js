@@ -1,4 +1,5 @@
 'use client';
+import FeedbackBridge from './FeedbackBridge';
 
 import { useEffect,useMemo,useRef,useState } from 'react';
 import { getSupabaseBrowser } from '../lib/supabase-browser';
@@ -101,8 +102,7 @@ export default function ParticipantProfile({initialRegistration,onChanged}){
   if(!data)return <section className="participant-card"><div className="participant-loading compact"><div className="spinner"/><p>{error||'Memuat profil...'}</p></div></section>;
 
   return <div className="profile-self-service">
-    {error&&<div className="alert alert-error">{error}</div>}
-    {notice&&<div className="alert alert-success">{notice}</div>}
+    <FeedbackBridge notice={notice} error={error} onNotice={()=>setNotice('')}/>
 
     {profileLocked&&<div className="participant-card profile-withdrawn-banner"><div><div className="eyebrow">Status Pendaftaran</div><h2>{registrationRejected?'Pendaftaran ditolak':reg.lifecycle_status==='withdrawn'?'Mengundurkan diri':'Pengunduran diri menunggu review'}</h2><p>{registrationRejected?`Pendaftaran Anda dinyatakan tidak memenuhi persyaratan.${reg.rejected_reason?` Alasan: ${reg.rejected_reason}`:''} ${reg.payment_status==='verified'?'Karena pembayaran sudah terverifikasi, Anda masih dapat mengajukan refund di bawah.':''}`:reg.lifecycle_status==='withdrawn'?'Profil tidak dapat diedit lagi. Riwayat pendaftaran dan refund tetap dapat dipantau dari halaman ini.':'Profil dikunci sementara sampai panitia memproses pengajuan. Anda masih dapat membatalkan pengajuan yang berstatus Menunggu.'}</p></div></div>}
 

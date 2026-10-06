@@ -1,5 +1,6 @@
 'use client';
 import { useEffect,useMemo,useState } from 'react';
+import { confirmDialog,toast } from '../lib/ui-feedback';
 
 // v0.7.1 — Panel peserta untuk Pretest, Evaluasi, dan Posttest (tampilan dirapikan).
 
@@ -17,7 +18,7 @@ function clearDraft(kind,moduleId){try{localStorage.removeItem(draftKey(kind,mod
 
 export default function AssessmentParticipantPanel({kind,data,loading,refresh,token,onOpenAttendance}){
   const label=LABEL[kind]||'Assessment';
-  const [showForm,setShowForm]=useState(false),[result,setResult]=useState(null);
+  const [showForm,setShowForm]=useState(false);
 
   if(loading&&!data)return <section className="participant-card"><div className="participant-loading compact"><div className="spinner"/><p>Memuat {label}...</p></div></section>;
   if(!data||data.configured===false)return <Locked icon="◷" title={`${label} belum tersedia`} text={data?.message||`Panitia belum menyiapkan ${label}.`}/>;
@@ -39,7 +40,6 @@ export default function AssessmentParticipantPanel({kind,data,loading,refresh,to
       <div className="eyebrow brand-blue">{label}</div>
       <h2>{kind==='evaluation'?'Terima kasih atas evaluasi Anda':`${label} sudah dikirim`}</h2>
       <p>{kind==='evaluation'?'Masukan Anda sangat berarti untuk pelatihan berikutnya.':'Jawaban Anda sudah tersimpan dan tidak dapat dikirim ulang.'}</p>
-      {result&&<div className="alert alert-success">{result}</div>}
       <div className="aq-done-stats">
         {scored&&<div className="aq-score"><strong>{a.percent}</strong><span>nilai</span></div>}
         {scored&&<div><span>Skor</span><strong>{a.score} / {a.max_score}</strong></div>}
@@ -50,7 +50,7 @@ export default function AssessmentParticipantPanel({kind,data,loading,refresh,to
 
   const closedCopy=data.state==='upcoming'?`${label} belum dibuka.`:data.state==='closed'?`Waktu ${label} sudah ditutup.`:data.state==='inactive'?`${label} belum diaktifkan panitia.`:data.attemptsLeft===0?`Batas pengerjaan ${label} sudah tercapai.`:`Soal ${label} belum tersedia.`;
 
-  const summary=attempts.length>0&&!single?<PosttestSummary label={label} data={data} result={result} canRetry={data.canStart&&!showForm} closedCopy={closedCopy} onRetry={()=>{setResult(null);setShowForm(true)}}/>:null;
+  const summary=attempts.length>0&&!single?<PosttestSummary label={label} data={data} canRetry={data.canStart&&!showForm} closedCopy={closedCopy} onRetry={()=>setShowForm(true)}/>:null;
 
   if(!data.canStart)return <>{summary}{!summary&&<Locked icon="◷" title={`${label} belum dapat dikerjakan`} text={closedCopy}>
     {m.open_at&&<p className="aq-schedule">Jadwal {fmtDate(m.open_at)} – {fmtTime(m.close_at)} WIB</p>}
@@ -61,7 +61,7 @@ export default function AssessmentParticipantPanel({kind,data,loading,refresh,to
   return <>
     {summary}
     {formVisible&&<AssessmentForm kind={kind} label={label} data={data} token={token}
-      onDone={async(message)=>{setResult(message);setShowForm(false);await refresh()}}
+      onDone={async(message)=>{toast.success(message);setShowForm(false);await refresh()}}
       onCancel={attempts.length?()=>setShowForm(false):null}/>}
   </>;
 }
@@ -70,7 +70,7 @@ function Locked({icon,title,text,children}){
   return <section className="participant-card pretest-participant locked"><div className="access-lock">{icon}</div><h2>{title}</h2><p>{text}</p>{children}</section>;
 }
 
-function PosttestSummary({label,data,result,canRetry,closedCopy,onRetry}){
+function PosttestSummary({label,data,canRetry,closedCopy,onRetry}){
   const m=data.module||{},attempts=data.attempts||[],best=data.best;
   const pass=m.pass_percent;
   const bestId=best?.id;
@@ -84,7 +84,6 @@ function PosttestSummary({label,data,result,canRetry,closedCopy,onRetry}){
         {data.passed!==null&&data.passed!==undefined&&<span className={`status ${data.passed?'status-ok':'status-pending'}`}>{data.passed?'Lulus':'Belum lulus'}</span>}
       </div>
     </div>
-    {result&&<div className="alert alert-success">{result}</div>}
     <div className="aq-attempts">
       <div className="aq-attempts-head"><strong>Riwayat attempt</strong>{data.attemptsLeft!==null&&data.attemptsLeft!==undefined?<small>sisa {data.attemptsLeft}</small>:<small>tanpa batas selama jadwal dibuka</small>}</div>
       <ol>{attempts.map(a=><li key={a.id} className={a.id===bestId?'best':''}>
@@ -128,8 +127,8 @@ function AssessmentForm({kind,label,data,token,onDone,onCancel}){
       focusUnit(missing);
       return;
     }
-    const confirmText=kind==='posttest'?'Kirim jawaban Posttest? Nilai terbaik dari semua attempt yang akan digunakan.':`Kirim ${label}? Setelah dikirim, jawaban tidak dapat diubah.`;
-    if(!confirm(confirmText))return;
+    const confirmText=kind==='posttest'?'Nilai terbaik dari semua attempt yang akan digunakan. Anda masih bisa mengulang selama jadwal dibuka.':'Setelah dikirim, jawaban tidak dapat diubah.';
+    if(!await confirmDialog({title:`Kirim ${label}?`,description:confirmText,confirmLabel:`Ya, kirim ${label}`}))return;
     try{
       setBusy(true);setError('');
       const t=await token();
