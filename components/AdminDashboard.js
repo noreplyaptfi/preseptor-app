@@ -9,6 +9,7 @@ import SpecialParticipantsAdmin from './SpecialParticipantsAdmin';
 import DayHOperations from './DayHOperations';
 import TestParticipantsAdmin from './TestParticipantsAdmin';
 import PretestAdmin from './PretestAdmin';
+import AssessmentAdmin from './AssessmentAdmin';
 import ActionDialog from './ActionDialog';
 import { isActiveRegistration,lifecycleLabel } from '../lib/registration-lifecycle';
 
@@ -147,12 +148,14 @@ export default function AdminDashboard(){
           </div>
         </div>
 
-        <div className={`admin-nav-group ${openNavGroup==='event'?'open':''} ${['access','dayh','pretest'].includes(view)?'has-active':''}`}>
+        <div className={`admin-nav-group ${openNavGroup==='event'?'open':''} ${['access','dayh','pretest','evaluation','posttest'].includes(view)?'has-active':''}`}>
           <button type="button" className="admin-nav-group-toggle" onClick={()=>toggleNavGroup('event')} title="Pelaksanaan"><span className="nav-icon">▣</span><span className="nav-label">Pelaksanaan</span><span className="nav-caret">⌄</span></button>
           <div className="admin-nav-submenu">
             <button title="Akses Acara" className={view==='access'?'active':''} onClick={()=>setView('access')}><span className="nav-sub-dot">•</span><span className="nav-label">Akses Acara</span></button>
             {adminUser?.role==='super_admin'&&<button title="Hari-H" className={view==='dayh'?'active':''} onClick={()=>setView('dayh')}><span className="nav-sub-dot">•</span><span className="nav-label">Hari-H</span></button>}
             {adminUser?.role==='super_admin'&&<button title="Pretest" className={view==='pretest'?'active':''} onClick={()=>setView('pretest')}><span className="nav-sub-dot">•</span><span className="nav-label">Pretest</span></button>}
+            {adminUser?.role==='super_admin'&&<button title="Evaluasi" className={view==='evaluation'?'active':''} onClick={()=>setView('evaluation')}><span className="nav-sub-dot">•</span><span className="nav-label">Evaluasi</span></button>}
+            {adminUser?.role==='super_admin'&&<button title="Posttest" className={view==='posttest'?'active':''} onClick={()=>setView('posttest')}><span className="nav-sub-dot">•</span><span className="nav-label">Posttest</span></button>}
             <button title="Scan QR Presensi" onClick={()=>location.href='/admin/checkin'}><span className="nav-sub-dot">•</span><span className="nav-label">Scan QR</span></button>
           </div>
         </div>
@@ -172,8 +175,8 @@ export default function AdminDashboard(){
     </aside>
 
     <main className="admin-main">
-      <header className="admin-header"><div><div className="eyebrow brand-blue">Dashboard Panitia</div><h1>{view==='overview'?'Ringkasan Kegiatan':view==='participants'?'Daftar Pendaftar':view==='settings'?'Pengaturan Pendaftaran':view==='announcements'?'Pengumuman':view==='access'?'Akses Pelaksanaan':view==='dayh'?'Command Center Hari-H':view==='pretest'?'Pretest':view==='requests'?'Permintaan Peserta':view==='refunds'?'Manajemen Refund':view==='special'?'Peserta Khusus':view==='masterdata'?'Data Master Form':view==='homebases'?'Data Homebase':view==='testaccounts'?'Akun Uji Peserta':view==='guide'?'Panduan End-to-End Admin':'Tim Panitia'}</h1></div><div className="admin-header-actions"><a className="btn btn-secondary" href="/" target="_blank">Lihat Situs ↗</a></div></header>
-      <div className="admin-mobile-nav"><button onClick={()=>setView('overview')}>Ringkasan</button><button onClick={()=>setView('participants')}>Pendaftar</button><button onClick={()=>setView('settings')}>Form</button><button onClick={()=>setView('announcements')}>Pengumuman</button><button onClick={()=>setView('access')}>Akses</button>{adminUser?.role==='super_admin'&&<button onClick={()=>setView('dayh')}>Hari-H</button>}{adminUser?.role==='super_admin'&&<button onClick={()=>setView('pretest')}>Pretest</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('requests')}>Permintaan</button>}{['super_admin','event_admin','payment_verifier'].includes(adminUser?.role)&&<button onClick={()=>setView('refunds')}>Refund</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('special')}>Peserta Khusus</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('masterdata')}>Master</button>}<button onClick={()=>location.href='/admin/checkin'}>Scan QR</button>{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('homebases')}>Homebase</button>}{adminUser?.role==='super_admin'&&<button onClick={()=>setView('testaccounts')}>Akun Uji</button>}{adminUser?.role==='super_admin'&&<button onClick={()=>setView('team')}>Tim</button>}<button onClick={()=>setView('guide')}>Panduan</button></div>
+      <header className="admin-header"><div><div className="eyebrow brand-blue">Dashboard Panitia</div><h1>{view==='overview'?'Ringkasan Kegiatan':view==='participants'?'Daftar Pendaftar':view==='settings'?'Pengaturan Pendaftaran':view==='announcements'?'Pengumuman':view==='access'?'Akses Pelaksanaan':view==='dayh'?'Command Center Hari-H':view==='pretest'?'Pretest':view==='evaluation'?'Evaluasi Pemateri':view==='posttest'?'Posttest':view==='requests'?'Permintaan Peserta':view==='refunds'?'Manajemen Refund':view==='special'?'Peserta Khusus':view==='masterdata'?'Data Master Form':view==='homebases'?'Data Homebase':view==='testaccounts'?'Akun Uji Peserta':view==='guide'?'Panduan End-to-End Admin':'Tim Panitia'}</h1></div><div className="admin-header-actions"><a className="btn btn-secondary" href="/" target="_blank">Lihat Situs ↗</a></div></header>
+      <div className="admin-mobile-nav"><button onClick={()=>setView('overview')}>Ringkasan</button><button onClick={()=>setView('participants')}>Pendaftar</button><button onClick={()=>setView('settings')}>Form</button><button onClick={()=>setView('announcements')}>Pengumuman</button><button onClick={()=>setView('access')}>Akses</button>{adminUser?.role==='super_admin'&&<button onClick={()=>setView('dayh')}>Hari-H</button>}{adminUser?.role==='super_admin'&&<button onClick={()=>setView('pretest')}>Pretest</button>}{adminUser?.role==='super_admin'&&<button onClick={()=>setView('evaluation')}>Evaluasi</button>}{adminUser?.role==='super_admin'&&<button onClick={()=>setView('posttest')}>Posttest</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('requests')}>Permintaan</button>}{['super_admin','event_admin','payment_verifier'].includes(adminUser?.role)&&<button onClick={()=>setView('refunds')}>Refund</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('special')}>Peserta Khusus</button>}{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('masterdata')}>Master</button>}<button onClick={()=>location.href='/admin/checkin'}>Scan QR</button>{['super_admin','event_admin'].includes(adminUser?.role)&&<button onClick={()=>setView('homebases')}>Homebase</button>}{adminUser?.role==='super_admin'&&<button onClick={()=>setView('testaccounts')}>Akun Uji</button>}{adminUser?.role==='super_admin'&&<button onClick={()=>setView('team')}>Tim</button>}<button onClick={()=>setView('guide')}>Panduan</button></div>
       {error&&<div className="alert alert-error">{error}</div>}{notice&&<div className="alert alert-success">{notice}</div>}
 
       {view==='overview'&&<>
@@ -207,6 +210,8 @@ export default function AdminDashboard(){
       {view==='masterdata'&&['super_admin','event_admin'].includes(adminUser?.role)&&<MasterDataAdmin/>}
       {view==='dayh'&&adminUser?.role==='super_admin'&&<DayHOperations onBroadcast={()=>setView('announcements')}/>}
       {view==='pretest'&&adminUser?.role==='super_admin'&&<PretestAdmin/>}
+      {view==='evaluation'&&adminUser?.role==='super_admin'&&<AssessmentAdmin kind="evaluation"/>}
+      {view==='posttest'&&adminUser?.role==='super_admin'&&<AssessmentAdmin kind="posttest"/>}
       {view==='testaccounts'&&adminUser?.role==='super_admin'&&<TestParticipantsAdmin/>}
 
       {view==='homebases'&&['super_admin','event_admin'].includes(adminUser?.role)&&<section className="homebase-admin-grid">
