@@ -28,6 +28,18 @@ const P={
   'chevron-left':<path d="M15 6l-6 6 6 6"/>,
   'chevron-right':<path d="M9 6l6 6-6 6"/>,
   external:<><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></>,
+  folder:<><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></>,
+  award:<><circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5L7 21l5-2.6L17 21l-1.5-7.5"/><path d="M10 9l1.5 1.5L14.5 7.5"/></>,
+  image:<><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M21 15.5l-5-4.5-8.5 8"/></>,
+  upload:<><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></>,
+  download:<><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></>,
+  link:<><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1"/><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/></>,
+  file:<><path d="M6 3h8l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/></>,
+  eye:<><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></>,
+  'arrow-up':<path d="M12 19V5M6 11l6-6 6 6"/>,
+  'arrow-down':<path d="M12 5v14M6 13l6 6 6-6"/>,
+  trash:<><path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></>,
+  compass:<><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></>,
   tests:<><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 3.5v2h6v-2M8.5 11l1.5 1.5 3-3M8.5 16.5h7"/></>
 };
 

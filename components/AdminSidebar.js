@@ -6,7 +6,7 @@ import BrandMark from './BrandMark';
 // v0.7.3 — Sidebar admin: lambang APTFI, ikon seragam, badge antrean, tooltip saat diciutkan,
 // dan drawer + topbar (dengan tombol Scan QR) di HP.
 
-const TITLES={overview:'Ringkasan',participants:'Pendaftar',requests:'Permintaan Peserta',special:'Peserta Khusus',refunds:'Refund',settings:'Status Form',announcements:'Pengumuman',access:'Akses Acara',dayh:'Command Center',pretest:'Pretest',evaluation:'Evaluasi',posttest:'Posttest',masterdata:'Data Master',homebases:'Data Homebase',testaccounts:'Akun Uji',team:'Tim Panitia',guide:'Panduan Admin'};
+const TITLES={overview:'Ringkasan',participants:'Pendaftar',requests:'Permintaan Peserta',special:'Peserta Khusus',refunds:'Refund',settings:'Status Form',announcements:'Pengumuman',access:'Akses Acara',dayh:'Command Center',pretest:'Pretest',evaluation:'Evaluasi',posttest:'Posttest',assets:'Materi & Background',certificates:'Sertifikat',masterdata:'Data Master',homebases:'Data Homebase',testaccounts:'Akun Uji',team:'Tim Panitia',guide:'Panduan Admin'};
 
 function Badge({value,tone='warn'}){
   if(!value)return null;
@@ -49,6 +49,8 @@ export default function AdminSidebar({view,setView,adminUser,roleLabel={},openNa
       is('super_admin')&&{view:'pretest',label:'Pretest',icon:'edit'},
       is('super_admin')&&{view:'evaluation',label:'Evaluasi',icon:'star'},
       is('super_admin')&&{view:'posttest',label:'Posttest',icon:'check'},
+      is('super_admin','event_admin')&&{view:'assets',label:'Materi & Background',icon:'folder'},
+      is('super_admin')&&{view:'certificates',label:'Sertifikat',icon:'award'},
       {action:scan,label:'Scan QR',icon:'qr',key:'scan'}
     ]},
     {id:'system',label:'Data & Sistem',icon:'database',items:[

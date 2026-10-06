@@ -108,7 +108,7 @@ export default function ParticipantProfile({initialRegistration,onChanged}){
 
     <form className="participant-card profile-form-card" onSubmit={saveProfile}>
       <div className="participant-card-head"><div><div className="eyebrow brand-blue">Profil Saya</div><h2>Data peserta</h2><p>Perbarui data pribadi dan profesional. Perubahan STRA/profesi akan diverifikasi ulang.</p></div></div>
-      <div className="certificate-name-preview"><small>Preview nama</small><strong>{preview||'—'}</strong><span>Format ini disiapkan untuk dokumen/sertifikat berikutnya.</span></div>
+      <div className="certificate-name-preview"><small>Preview nama</small><strong>{preview||'—'}</strong><span>Nama dan gelar ini akan tercetak di sertifikat.</span></div>
 
       <div className="profile-section-title">Nama & kontak</div>
       <div className="profile-grid profile-name-grid">

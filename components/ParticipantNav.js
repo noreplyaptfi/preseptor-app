@@ -5,8 +5,9 @@ import BrandMark from './BrandMark';
 
 // v0.7.3 — Navigasi peserta: sidebar berkelompok dengan penanda status (desktop & drawer HP),
 // topbar HP, dan tombol bawah (Status · Hadir · Tes · Info · Menu).
+// v0.8.0 — + Virtual Background, Materi, Sertifikat, Panduan.
 
-export const TAB_LABELS={registration:'Status Pendaftaran',profile:'Profil Saya',attendance:'Kehadiran',access:'Akses Acara',pretest:'Pretest',evaluation:'Evaluasi',posttest:'Posttest',announcements:'Pengumuman'};
+export const TAB_LABELS={registration:'Status Pendaftaran',profile:'Profil Saya',attendance:'Kehadiran',access:'Akses Acara',pretest:'Pretest',evaluation:'Evaluasi',posttest:'Posttest',announcements:'Pengumuman',backgrounds:'Virtual Background',materials:'Materi',certificate:'Sertifikat',guide:'Panduan'};
 const TESTS=[['pretest','Pretest','edit'],['evaluation','Evaluasi','star'],['posttest','Posttest','check']];
 const MONTHS=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 
@@ -47,6 +48,12 @@ export function navMarkers(data,summary){
     else if(s.canStart)out[kind]={type:'todo',hint:'Dibuka'};
     else if(['inactive','upcoming','not_configured'].includes(s.state)||!s.attendanceOk)out[kind]={type:'lock',hint:!s.attendanceOk?'Presensi dulu':'Belum dibuka'};
   }
+  const cert=summary?.certificate;
+  if(cert){
+    if(cert.status==='ready')out.certificate=cert.downloaded?{type:'done',hint:'Sudah diunduh'}:{type:'todo',hint:'Siap diunduh'};
+    else if(cert.status==='waiting_release')out.certificate={type:'wait',hint:'Menunggu rilis panitia'};
+    else if(cert.status==='incomplete')out.certificate={type:'lock',hint:'Syarat belum lengkap'};
+  }
   return out;
 }
 
@@ -59,6 +66,7 @@ function Marker({m}){
 }
 
 export function ParticipantSidebar({tab,select,data,summary,markers,unreadCount,collapsed,toggleCollapsed,open,close,logout}){
+  const count=n=>n>0?<span className="nav-count">{n}</span>:null;
   const Item=({id,icon,label,extra})=><button type="button" className={`nav-item ${tab===id?'active':''}`} onClick={()=>select(id)} data-tip={label} aria-current={tab===id?'page':undefined}>
     <NavIcon name={icon}/><span className="nav-text">{label}</span>{extra}<Marker m={markers[id]}/>
   </button>;
@@ -76,10 +84,15 @@ export function ParticipantSidebar({tab,select,data,summary,markers,unreadCount,
         <div className="nav-section">{dayRange(summary?.attendance?.days)}</div>
         <Item id="attendance" icon="calendar-check" label="Kehadiran"/>
         <Item id="access" icon="play" label="Akses Acara"/>
+        <Item id="backgrounds" icon="image" label="Virtual Background" extra={count(summary?.assets?.virtual_background)}/>
+        <Item id="materials" icon="folder" label="Materi" extra={count(summary?.assets?.material)}/>
         <div className="nav-section">Assessment</div>
         {TESTS.map(([id,label,icon])=><Item key={id} id={id} icon={icon} label={label}/>)}
+        <div className="nav-section">Penyelesaian</div>
+        <Item id="certificate" icon="award" label="Sertifikat"/>
         <div className="nav-section">Info</div>
         <Item id="announcements" icon="bell" label="Pengumuman" extra={unreadCount>0?<span className="nav-badge danger">{unreadCount}</span>:null}/>
+        <Item id="guide" icon="compass" label="Panduan"/>
       </nav>
       <div className="side-foot">
         <div className="side-profile" data-tip={`${name} · Keluar`}>
@@ -110,8 +123,8 @@ export function ParticipantTabbar({tab,select,openMenu,unreadCount,markers}){
     window.addEventListener('keydown',onKey);
     return ()=>window.removeEventListener('keydown',onKey);
   },[sheet]);
-  const testActive=TESTS.some(([id])=>id===tab);
-  const testTodo=TESTS.some(([id])=>markers[id]?.type==='todo');
+  const testActive=TESTS.some(([id])=>id===tab)||tab==='certificate';
+  const testTodo=TESTS.some(([id])=>markers[id]?.type==='todo')||markers.certificate?.type==='todo';
   const go=id=>{setSheet(false);select(id)};
   const Tab=({active,icon,label,onClick,dot,badge})=><button type="button" className={`tab-btn ${active?'active':''}`} onClick={onClick} aria-current={active?'page':undefined}>
     <span className="tab-icon"><NavIcon name={icon} size={21}/>{badge?<span className="tab-badge">{badge>9?'9+':badge}</span>:dot?<span className="tab-dot"/>:null}</span>
@@ -123,11 +136,11 @@ export function ParticipantTabbar({tab,select,openMenu,unreadCount,markers}){
       <Tab active={!sheet&&tab==='attendance'} icon="calendar-check" label="Hadir" onClick={()=>go('attendance')} dot={markers.attendance?.type==='todo'}/>
       <Tab active={testActive||sheet} icon="tests" label="Tes" onClick={()=>setSheet(v=>!v)} dot={testTodo}/>
       <Tab active={!sheet&&tab==='announcements'} icon="bell" label="Info" onClick={()=>go('announcements')} badge={unreadCount}/>
-      <Tab active={!sheet&&['profile','access'].includes(tab)} icon="menu" label="Menu" onClick={()=>{setSheet(false);openMenu()}}/>
+      <Tab active={!sheet&&['profile','access','backgrounds','materials','guide'].includes(tab)} icon="menu" label="Menu" onClick={()=>{setSheet(false);openMenu()}}/>
     </nav>
     {sheet&&<>
       <button type="button" className="sheet-backdrop" onClick={()=>setSheet(false)} aria-label="Tutup"/>
-      <div className="tab-sheet" role="dialog" aria-label="Pilih assessment">
+      <div className="tab-sheet" role="dialog" aria-label="Pilih assessment atau sertifikat">
         <div className="tab-sheet-grip"/>
         <strong>Assessment</strong>
         {TESTS.map(([id,label,icon])=>{const m=markers[id];return <button type="button" key={id} className={`sheet-item ${tab===id?'active':''}`} onClick={()=>go(id)}>
@@ -135,6 +148,12 @@ export function ParticipantTabbar({tab,select,openMenu,unreadCount,markers}){
           <span className="sheet-text"><b>{label}</b><small>{m?.hint||'Lihat detail'}</small></span>
           <Marker m={m}/>
         </button>})}
+        <strong className="sheet-divider">Penyelesaian</strong>
+        <button type="button" className={`sheet-item ${tab==='certificate'?'active':''}`} onClick={()=>go('certificate')}>
+          <span className="sheet-icon"><NavIcon name="award"/></span>
+          <span className="sheet-text"><b>Sertifikat</b><small>{markers.certificate?.hint||'Lihat syarat & unduh'}</small></span>
+          <Marker m={markers.certificate}/>
+        </button>
       </div>
     </>}
   </>;

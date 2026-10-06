@@ -1,6 +1,9 @@
 'use client';
 import FeedbackBridge from './FeedbackBridge';
 import AdminSidebar from './AdminSidebar';
+import EventAssetsAdmin from './EventAssetsAdmin';
+import CertificatesAdmin from './CertificatesAdmin';
+import AdminGuide from './AdminGuide';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getSupabaseBrowser } from '../lib/supabase-browser';
 import UniversityCombobox from './UniversityCombobox';
@@ -55,7 +58,7 @@ export default function AdminDashboard(){
     setOpenNavGroup(current=>current===group?'':group)
   }
   useEffect(()=>{
-    const group=({participants:'participants',requests:'participants',special:'participants',refunds:'finance',settings:'registration',announcements:'registration',access:'event',dayh:'event',pretest:'event',masterdata:'system',homebases:'system',testaccounts:'system',team:'system',guide:'system'})[view];
+    const group=({participants:'participants',requests:'participants',special:'participants',refunds:'finance',settings:'registration',announcements:'registration',access:'event',dayh:'event',pretest:'event',evaluation:'event',posttest:'event',assets:'event',certificates:'event',masterdata:'system',homebases:'system',testaccounts:'system',team:'system',guide:'system'})[view];
     if(group)setOpenNavGroup(group);
   },[view]);
   async function loadHomebases(){try{const j=await api('/api/admin/universities');setHomebases(j.universities||[])}catch(e){setError(e.message)}}
@@ -125,7 +128,7 @@ export default function AdminDashboard(){
     <AdminSidebar view={view} setView={setView} adminUser={adminUser} roleLabel={roleLabel} openNavGroup={openNavGroup} toggleNavGroup={toggleNavGroup} collapsed={sidebarCollapsed} toggleSidebar={toggleSidebar} logout={logout} counts={{queue:navQueue,requests:navCounts.requests,refunds:navCounts.refunds}}/>
 
     <main className="admin-main">
-      <header className="admin-header"><div><div className="eyebrow brand-blue">Dashboard Panitia</div><h1>{view==='overview'?'Ringkasan Kegiatan':view==='participants'?'Daftar Pendaftar':view==='settings'?'Pengaturan Pendaftaran':view==='announcements'?'Pengumuman':view==='access'?'Akses Pelaksanaan':view==='dayh'?'Command Center Hari-H':view==='pretest'?'Pretest':view==='evaluation'?'Evaluasi Pemateri':view==='posttest'?'Posttest':view==='requests'?'Permintaan Peserta':view==='refunds'?'Manajemen Refund':view==='special'?'Peserta Khusus':view==='masterdata'?'Data Master Form':view==='homebases'?'Data Homebase':view==='testaccounts'?'Akun Uji Peserta':view==='guide'?'Panduan End-to-End Admin':'Tim Panitia'}</h1></div><div className="admin-header-actions"><a className="btn btn-secondary" href="/" target="_blank">Lihat Situs ↗</a></div></header>
+      <header className="admin-header"><div><div className="eyebrow brand-blue">Dashboard Panitia</div><h1>{view==='overview'?'Ringkasan Kegiatan':view==='participants'?'Daftar Pendaftar':view==='settings'?'Pengaturan Pendaftaran':view==='announcements'?'Pengumuman':view==='access'?'Akses Pelaksanaan':view==='dayh'?'Command Center Hari-H':view==='pretest'?'Pretest':view==='evaluation'?'Evaluasi Pemateri':view==='posttest'?'Posttest':view==='assets'?'Materi & Virtual Background':view==='certificates'?'Sertifikat Peserta':view==='requests'?'Permintaan Peserta':view==='refunds'?'Manajemen Refund':view==='special'?'Peserta Khusus':view==='masterdata'?'Data Master Form':view==='homebases'?'Data Homebase':view==='testaccounts'?'Akun Uji Peserta':view==='guide'?'Panduan Panitia':'Tim Panitia'}</h1></div><div className="admin-header-actions"><a className="btn btn-secondary" href="/" target="_blank">Lihat Situs ↗</a></div></header>
       
       <FeedbackBridge notice={notice} error={error} onNotice={()=>setNotice('')}/>
 
@@ -162,6 +165,8 @@ export default function AdminDashboard(){
       {view==='pretest'&&adminUser?.role==='super_admin'&&<PretestAdmin/>}
       {view==='evaluation'&&adminUser?.role==='super_admin'&&<AssessmentAdmin kind="evaluation"/>}
       {view==='posttest'&&adminUser?.role==='super_admin'&&<AssessmentAdmin kind="posttest"/>}
+      {view==='assets'&&['super_admin','event_admin'].includes(adminUser?.role)&&<EventAssetsAdmin/>}
+      {view==='certificates'&&adminUser?.role==='super_admin'&&<CertificatesAdmin/>}
       {view==='testaccounts'&&adminUser?.role==='super_admin'&&<TestParticipantsAdmin/>}
 
       {view==='homebases'&&['super_admin','event_admin'].includes(adminUser?.role)&&<section className="homebase-admin-grid">
@@ -178,7 +183,7 @@ export default function AdminDashboard(){
         </div>
       </section>}
 
-      {view==='guide'&&<AdminGuide/>}
+      {view==='guide'&&<AdminGuide role={adminUser?.role} onNavigate={setView}/>}
 
       {view==='team'&&adminUser?.role==='super_admin'&&<section className="admin-grid-team"><form onSubmit={addAdmin} className="panel"><div className="panel-head"><div><h2>Tambah panitia</h2><p>Undangan aktivasi password dikirim melalui Resend.</p></div></div><div className="field"><label>Nama</label><input name="display_name" placeholder="Nama panitia"/></div><div className="field"><label>Email</label><input name="email" type="email" required placeholder="nama@aptfi.or.id"/></div><div className="field"><label>Role</label><select name="role" defaultValue="viewer"><option value="event_admin">Admin Event</option><option value="document_verifier">Verifikator Dokumen</option><option value="payment_verifier">Verifikator Pembayaran</option><option value="viewer">Viewer</option><option value="super_admin">Super Admin</option></select></div><button className="btn btn-brand-primary">Simpan & kirim undangan</button></form><div className="panel"><div className="panel-head"><div><h2>Daftar akun</h2><p>{team.length} akun panitia terdaftar.</p></div></div><div className="team-list">{team.map(u=><div className="team-row" key={u.id}><div className="avatar">{(u.display_name||u.email).slice(0,1).toUpperCase()}</div><div className="team-info"><strong>{u.display_name||u.email}</strong><small>{u.email} · {roleLabel[u.role]||u.role}</small></div><span className={`status ${u.active?'status-ok':'status-bad'}`}>{u.active?'Aktif':'Nonaktif'}</span><button className="btn btn-secondary btn-small" onClick={()=>toggleAdmin(u)}>{u.active?'Nonaktifkan':'Aktifkan'}</button></div>)}</div></div></section>}
     </main>
@@ -199,23 +204,6 @@ function BillingModal({modal,onClose}){
   const title=modal.kind==='receipt'?'Kwitansi Pembayaran':'Tagihan / Invoice';
   if(modal.loading)return <div className="modal-backdrop"><div className="billing-modal loading-modal"><div className="spinner"/><p>Menyiapkan {title.toLowerCase()}...</p><small>Dokumen dibuka di dalam aplikasi agar tidak diblokir browser.</small></div></div>;
   return <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><section className="billing-modal"><header className="document-modal-header"><div><div className="eyebrow brand-blue">Dokumen Keuangan</div><h2>{title}</h2><p>{modal.row.full_name} · {modal.row.registration_code}</p></div><button className="modal-close" onClick={onClose} aria-label="Tutup">×</button></header><div className="billing-preview"><iframe title={title} src={modal.url}/></div><footer className="billing-modal-actions"><a className="btn btn-secondary" href={modal.url} target="_blank" rel="noreferrer">Buka tab baru ↗</a><a className="btn btn-brand-primary" href={modal.url} download={`${modal.kind==='receipt'?'kwitansi':'tagihan'}-${modal.row.registration_code}.pdf`}>Unduh PDF</a></footer></section></div>
-}
-
-function AdminGuide(){
-  const steps=[
-    ['1. Pantau pendaftaran','Buka Ringkasan untuk melihat total peserta, kuota, dokumen pending, pembayaran pending, dan status form.'],
-    ['2. Review dokumen','Masuk ke Pendaftar, klik STRA atau Pengalaman. Periksa preview di popup, lalu Verifikasi atau Tolak. Penolakan wajib disertai alasan dan langkah selanjutnya.'],
-    ['3. Verifikasi pembayaran','Klik dokumen Pembayaran pada peserta. Setelah bukti sesuai, verifikasi. Kwitansi otomatis tersedia setelah pembayaran terverifikasi.'],
-    ['4. Profil peserta','Peserta dapat memperbarui nama, gelar, WhatsApp, homebase, STRA, dan data profesional dari Profil Saya. Perubahan STRA atau pengalaman otomatis kembali ke status Menunggu.'],
-    ['5. Permintaan peserta','Perubahan email, mode Online/Offline, dan pengunduran diri tidak langsung diterapkan. Review dari menu Permintaan lalu Setujui atau Tolak dengan catatan yang jelas.'],
-    ['6. Penolakan & pengunduran diri','Jika salah satu dokumen dinyatakan tidak valid, Super Admin/Admin Event dapat menolak pendaftaran dari detail peserta. Pendaftaran ditolak dan withdrawal yang disetujui sama-sama tidak memakai kuota, tetapi datanya tetap tersimpan.'],
-    ['7. Refund','Peserta yang mengundurkan diri atau pendaftarannya ditolak tetap dapat mengajukan refund bila pembayaran sudah terverifikasi. Review pengajuan refund. Setelah valid, ubah menjadi Siap Diproses, pilih beberapa refund untuk membuat Batch, lalu Export Excel untuk transfer massal. Setelah transfer selesai, tandai batch Selesai.'],
-    ['8. Data Master','Kelola Jenis Tempat Praktik, minimum pengalaman, urutan, serta status aktif/nonaktif dari Data Master. Data lama tidak dihapus saat opsi dinonaktifkan.'],
-    ['9. Homebase','Gunakan Data Homebase untuk menambah, mengubah, menonaktifkan, atau mengaktifkan perguruan tinggi pada form peserta.'],
-    ['10. Pengumuman & form','Gunakan Pengumuman untuk broadcast peserta dan Status Form untuk buka/tutup/maintenance pendaftaran.'],
-    ['11. Persiapan pelaksanaan','Gunakan Akses Acara untuk QR/Zoom, Hari-H untuk presensi, dan Pretest untuk assessment awal. Uji seluruh flow memakai Akun Uji sebelum modul dibuka untuk peserta resmi.']
-  ];
-  return <section className="admin-guide"><div className="panel guide-hero"><div><div className="eyebrow brand-blue">Panduan Operasional</div><h2>Alur kerja panitia dari pendaftaran sampai pelaksanaan</h2><p>Gunakan panduan ini sebagai checklist harian. Selalu lakukan verifikasi dari dashboard dan hindari mengubah data langsung di Supabase kecuali untuk pemeliharaan teknis.</p></div><div className="guide-security-note"><strong>Keamanan</strong><span>Data rekening refund, akun admin, service role key, dan dokumen privat tidak boleh dibagikan di kanal publik.</span></div></div><div className="guide-steps">{steps.map(([title,copy])=><article key={title}><h3>{title}</h3><p>{copy}</p></article>)}</div><div className="panel guide-emergency"><h3>Jika ada kendala operasional</h3><div className="guide-emergency-grid"><div><strong>Form bermasalah</strong><p>Aktifkan Maintenance, beri pesan yang jelas, lalu perbaiki tanpa menerima submit baru.</p></div><div><strong>Email gagal</strong><p>Data tetap tersimpan. Periksa Resend dan email log sebelum mengirim ulang.</p></div><div><strong>Peserta salah data</strong><p>Gunakan Profil/Permintaan atau Edit Data pada record yang sama. Jangan membuat pendaftaran kedua.</p></div></div></div></section>
 }
 
 function canReview(role,type){return type==='payment_proof'?['super_admin','event_admin','payment_verifier'].includes(role):['super_admin','event_admin','document_verifier'].includes(role)}

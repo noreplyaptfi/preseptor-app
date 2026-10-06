@@ -1081,3 +1081,174 @@ h1,h2,h3,h4,.brand,.btn,.status,.eyebrow{font-family:var(--font-lato),Lato,Arial
 @media (prefers-reduced-motion:reduce){.admin-side,.part-side,.tab-sheet{transition:none;animation:none}}
 /* sticky topbar/sidebar butuh pembungkus yang bukan scroll container */
 .participant-page-with-sidebar{overflow-x:clip}
+
+/* ==========================================================================
+   v0.8.0 — Sertifikat, Virtual Background, Materi, Panduan, Verifikasi
+   ========================================================================== */
+.spinner.small{width:16px;height:16px;border-width:2px}
+.nav-count{flex:0 0 auto;min-width:20px;height:20px;padding:0 6px;border-radius:999px;display:grid;place-items:center;background:rgba(255,255,255,.14);color:#dce5ff;font-size:11px;font-weight:850}
+.nav-item.active .nav-count{background:#eef4ff;color:#164caa}
+.tab-sheet .sheet-divider{margin-top:6px}
+
+/* ---------- Komponen admin kecil ---------- */
+.asset-icon-btn{width:32px;height:32px;display:inline-grid;place-items:center;border:1px solid var(--line);border-radius:9px;background:#fff;color:#24385f;cursor:pointer}
+.asset-icon-btn:hover:not(:disabled){border-color:#9dbcf3;color:#1857e8}
+.asset-icon-btn.danger{color:#b42318}
+.asset-icon-btn.danger:hover:not(:disabled){border-color:#f3b7b3;background:#fff6f5;color:#b42318}
+.asset-icon-btn:disabled{opacity:.4;cursor:not-allowed}
+.mini-switch{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:#405272;cursor:pointer;white-space:nowrap}
+.asm-tabs.compact{padding:3px}
+.asm-tabs.compact button{padding:7px 12px;font-size:12px}
+.row-muted td{opacity:.55}
+
+/* ---------- Admin: unggah aset ---------- */
+.asset-upload{display:grid;gap:14px}
+.asset-upload .asm-toolbar{margin-bottom:0}
+.asset-upload-grid{display:grid;grid-template-columns:minmax(220px,320px) minmax(0,1fr);gap:18px;align-items:start}
+.asset-dropzone{position:relative;display:grid;justify-items:center;align-content:center;gap:6px;min-height:200px;padding:18px;border:2px dashed #c7d9ff;border-radius:16px;background:#f7faff;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;overflow:hidden}
+.asset-dropzone:hover,.asset-dropzone.drag{border-color:#1857e8;background:#eef4ff}
+.asset-dropzone.has-file{border-style:solid;border-color:#9fdbb5;background:#f6fcf8}
+.asset-dropzone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.asset-dropzone img{width:100%;max-height:150px;object-fit:contain;border-radius:10px;background:#fff}
+.asset-dropzone-icon{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:#fff;color:#1857e8;box-shadow:0 6px 16px rgba(24,87,232,.12)}
+.asset-dropzone strong{color:#0b174f;font-size:13px;overflow-wrap:anywhere}
+.asset-dropzone small{color:var(--muted);font-size:11.5px;line-height:1.45}
+.asset-upload-fields{display:grid;gap:12px}
+.asset-upload-fields .field,.link-field{margin-bottom:0}
+.asset-upload-publish{align-self:end;min-height:46px}
+.asset-upload-stage{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:750;color:#1752d1}
+
+/* ---------- Grid virtual background ---------- */
+.vb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.vb-card{display:grid;border:1px solid #e3eaf6;border-radius:16px;background:#fff;overflow:hidden}
+.vb-card.hidden-asset{opacity:.65}
+.vb-thumb{position:relative;aspect-ratio:16/9;display:grid;place-items:center;background:#eef3fb;color:#8090ad;overflow:hidden}
+.vb-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.vb-hidden-badge{position:absolute;top:8px;left:8px;padding:3px 8px;border-radius:999px;background:rgba(11,18,64,.78);color:#fff;font-size:10.5px;font-weight:800}
+.vb-body{display:grid;gap:6px;padding:12px 13px}
+.vb-body strong{color:#0b174f;font-size:13.5px}
+.vb-body small{color:var(--muted);font-size:11.5px}
+.vb-card .asm-qform{margin:10px}
+.vb-grid.participant .vb-body .btn{justify-self:start;margin-top:2px}
+
+/* ---------- Daftar materi ---------- */
+.asset-list,.material-list{display:grid;gap:8px}
+.asset-row,.material-row{display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid #e3eaf6;border-radius:14px;background:#fff}
+.asset-row.hidden-asset{opacity:.65}
+.asset-type{display:grid;justify-items:center;gap:2px;padding:8px 4px;border-radius:12px;background:#eef4ff;color:#1857e8}
+.asset-type b{font-size:10px;letter-spacing:.04em}
+.asset-main,.material-main{min-width:0}
+.asset-main strong,.material-main strong{display:flex;flex-wrap:wrap;align-items:center;gap:8px;color:#0b174f;font-size:13.5px}
+.asset-main p,.material-main p{margin:3px 0 0;color:#405272;font-size:12.5px;line-height:1.45}
+.asset-main small,.material-main small{display:block;margin-top:3px;color:var(--muted);font-size:11.5px;overflow-wrap:anywhere}
+.asset-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.vb-body .asset-actions{justify-content:flex-start}
+
+/* ---------- Admin sertifikat ---------- */
+.check-dots{display:flex;flex-wrap:wrap;gap:4px}
+.check-dots span{min-width:34px;padding:3px 6px;border-radius:7px;text-align:center;font-size:10.5px;font-weight:850}
+.check-dots .ok{background:#e9f8ee;color:#16813d}
+.check-dots .no{background:#f3f5f9;color:#9aa5bb;text-decoration:line-through}
+.cert-table td small{display:block}
+.cert-no{font-size:12px;letter-spacing:.01em}
+.cert-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.cert-actions .btn{gap:5px}
+.cert-legend{margin:12px 0 0;color:var(--muted);font-size:12px;line-height:1.6}
+
+/* ---------- Peserta: sertifikat ---------- */
+.cert-participant,.assets-participant,.participant-guide{display:grid;gap:14px}
+.cert-participant>*,.assets-participant>*,.participant-guide>*{margin:0}
+.cert-hero{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:18px;align-items:center}
+.cert-hero-icon{width:64px;height:64px;border-radius:20px;display:grid;place-items:center;background:#eef4ff;color:#1857e8}
+.cert-hero.status-ready .cert-hero-icon{background:#e9f8ee;color:#16813d}
+.cert-hero.status-revoked .cert-hero-icon{background:#fff0ef;color:#b42318}
+.cert-hero-text .eyebrow{display:flex;gap:8px;align-items:center}
+.cert-hero-text h2{margin:4px 0 6px;color:#0b174f}
+.cert-hero-text p{margin:0;color:var(--muted);line-height:1.55}
+.cert-progress{display:grid;justify-items:center;padding:10px 14px;border-radius:16px;background:#f6f9ff;border:1px solid #e0e8f5;min-width:88px}
+.cert-progress strong{font-size:30px;line-height:1;color:#0b174f}
+.cert-progress strong small{font-size:15px;color:var(--muted)}
+.cert-progress span{font-size:11px;color:var(--muted);font-weight:700;margin-top:3px}
+.cert-hero.status-ready .cert-progress strong{color:#16813d}
+.cert-download{display:grid;gap:14px}
+.cert-name{display:grid;gap:3px;padding:14px 16px;border-radius:14px;background:#f6f9ff;border:1px solid #e0e8f5}
+.cert-name span{font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:#71809e}
+.cert-name strong{font-size:19px;color:#0b174f;font-family:Georgia,"Times New Roman",serif;font-style:italic}
+.cert-name small{color:var(--muted);font-size:12px}
+.cert-download-btn{justify-self:start;min-height:48px;padding:12px 20px;gap:9px}
+.cert-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:0}
+.cert-meta>div{padding:10px 12px;border-radius:12px;border:1px solid #e3eaf6;background:#fff}
+.cert-meta dt{font-size:10px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:#71809e}
+.cert-meta dd{margin:3px 0 0;font-size:13px;font-weight:750;color:#1b2b55;overflow-wrap:anywhere}
+.cert-meta a{color:#1857e8}
+.cert-checklist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.cert-checklist li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 13px;border:1px solid #e3eaf6;border-radius:13px;background:#fff}
+.cert-checklist li.ok{background:#fbfefc;border-color:#cdebd8}
+.cert-check{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;border:2px solid #d3dbe8;color:#fff;font-size:13px;font-weight:900}
+.cert-checklist li.ok .cert-check{background:#16a34a;border-color:#16a34a}
+.cert-checklist strong{display:block;font-size:13.5px;color:#0b174f}
+.cert-checklist small{display:block;margin-top:2px;font-size:12px;color:var(--muted)}
+
+/* ---------- Peserta: virtual background ---------- */
+.vb-howto h3{margin:0 0 10px;font-size:16px;color:#0b174f}
+.vb-howto ol{margin:0 0 10px;padding-left:20px;display:grid;gap:8px;color:#24385f;line-height:1.55;font-size:13.5px}
+.vb-howto small{color:var(--muted);font-size:12px;line-height:1.5}
+.material-row .btn{gap:6px;white-space:nowrap}
+
+/* ---------- Panduan alur (panitia & peserta) ---------- */
+.flow-guide{display:grid;gap:16px}
+.flow-phases{display:grid;gap:16px}
+.flow-phase{border:1px solid var(--line);border-radius:20px;background:#fff;overflow:hidden}
+.flow-phase-head{display:flex;gap:14px;align-items:flex-start;padding:18px 20px;background:linear-gradient(135deg,#f3f7ff,#fff);border-bottom:1px solid #e6edf8}
+.flow-phase-index{flex:0 0 36px;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:#11185d;color:#fff;font-weight:900}
+.flow-chip{display:inline-block;padding:3px 10px;border-radius:999px;background:#eef4ff;color:#1752d1;font-size:11px;font-weight:850;letter-spacing:.02em}
+.flow-phase-head h3{margin:6px 0 2px;font-size:18px;color:#0b174f}
+.flow-phase-head p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.flow-steps{list-style:none;margin:0;padding:6px 20px 14px}
+.flow-step{position:relative;display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:14px;align-items:start;padding:12px 0;border-top:1px solid #f0f3f8}
+.flow-steps .flow-step:first-child{border-top:0}
+.flow-num{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#eef4ff;color:#164caa;font-size:12px;font-weight:850}
+.flow-body{min-width:0}
+.flow-time{display:inline-block;margin-bottom:3px;padding:2px 8px;border-radius:7px;background:#fff7e8;color:#9a4d05;font-size:11px;font-weight:850}
+.flow-body h4{margin:0 0 4px;font-size:14.5px;color:#0b174f}
+.flow-body p{margin:0;color:#405272;font-size:13px;line-height:1.6}
+.flow-action{padding-top:2px}
+.flow-action .btn{white-space:nowrap;gap:4px}
+.flow-simple{display:grid;gap:8px}
+.flow-simple .flow-step{grid-template-columns:30px minmax(0,1fr);padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.guide-help h3{margin:0 0 6px;font-size:16px;color:#0b174f}
+.guide-help p{margin:0;color:var(--muted);line-height:1.6}
+
+/* ---------- Halaman verifikasi sertifikat ---------- */
+.verify-card{width:min(100%,640px);margin:28px auto 40px;padding:32px 28px;border-radius:24px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);text-align:center;display:grid;justify-items:center;gap:8px}
+.verify-icon{width:68px;height:68px;border-radius:50%;display:grid;place-items:center;font-size:32px;font-weight:900;background:#e9f8ee;color:#16813d;margin-bottom:6px}
+.verify-test .verify-icon,.verify-revoked .verify-icon{background:#fff0ef;color:#b42318}
+.verify-missing .verify-icon{background:#f3f5f9;color:#71809e}
+.verify-card h1{margin:2px 0;font-size:clamp(24px,4vw,30px);color:#0b174f}
+.verify-card>p{margin:0;max-width:480px;color:var(--muted);line-height:1.6}
+.verify-data{width:100%;margin:14px 0 4px;display:grid;gap:8px;text-align:left}
+.verify-data>div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:11px 14px;border-radius:12px;background:#f6f9ff;border:1px solid #e3eaf6}
+.verify-data dt{font-size:12px;font-weight:800;color:#71809e}
+.verify-data dd{margin:0;font-size:14px;font-weight:750;color:#0b174f;overflow-wrap:anywhere}
+.verify-code{color:var(--muted);font-size:12px}
+
+@media(max-width:900px){
+  .asset-upload-grid{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .cert-hero{grid-template-columns:52px minmax(0,1fr);gap:14px}
+  .cert-hero-icon{width:52px;height:52px;border-radius:16px}
+  .cert-progress{grid-column:1/-1;justify-self:start;grid-auto-flow:column;align-items:baseline;gap:8px;padding:8px 12px}
+  .cert-download-btn{justify-self:stretch}
+  .asset-row,.material-row{grid-template-columns:48px minmax(0,1fr)}
+  .asset-row .asset-actions{grid-column:1/-1;justify-content:flex-start}
+  .material-row .btn{grid-column:2;justify-self:start}
+  .flow-phase-head{padding:14px 14px}
+  .flow-steps{padding:4px 14px 10px}
+  .flow-step{grid-template-columns:28px minmax(0,1fr)}
+  .flow-action{grid-column:2;padding-top:0}
+  .verify-card{padding:26px 18px}
+  .verify-data>div{grid-template-columns:1fr;gap:2px}
+  .cert-checklist li{grid-template-columns:26px minmax(0,1fr)}
+  .cert-checklist li .btn{grid-column:2;justify-self:start}
+}
