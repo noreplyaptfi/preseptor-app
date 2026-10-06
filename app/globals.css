@@ -1357,3 +1357,7 @@ h1,h2,h3,h4,.brand,.btn,.status,.eyebrow{font-family:var(--font-lato),Lato,Arial
 .cam-pending{background:rgba(29,78,216,.94)}
 .cam-blocked,.cam-error,.cam-invalid{background:rgba(185,28,28,.94)}
 @media(max-width:760px){.cam-frame{aspect-ratio:4/3}}
+
+/* ===== v0.8.3 — Pengumuman: jumlah penerima email ===== */
+.announcement-recipient-hint{display:block;margin-top:7px;font-size:12px;color:var(--muted);line-height:1.5}
+.announcement-recipient-hint b{color:#11185d}

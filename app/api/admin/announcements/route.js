@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '../../../../lib/auth';
 import { getSupabaseAdmin } from '../../../../lib/supabase-admin';
-import { sanitizeAnnouncementHtml,announcementMatches } from '../../../../lib/announcement';
+import { sanitizeAnnouncementHtml } from '../../../../lib/announcement';
+import { announcementRecipient } from '../../../../lib/announcement-audience';
 import { sendBulkEmail } from '../../../../lib/email';
 import { announcementEmail } from '../../../../lib/email-template';
 
@@ -29,8 +30,9 @@ export async function POST(request){
   const {data:event}=await db.from('events').select('id').eq('slug',process.env.NEXT_PUBLIC_EVENT_SLUG||'preseptor-2026').single();
   const {data:announcement,error}=await db.from('announcements').insert({event_id:event.id,subject,body_html:bodyHtml,audience,created_by:auth.user.email}).select('*').single();
   if(error) return NextResponse.json({message:'Gagal menyimpan pengumuman.'},{status:500});
-  const {data:regs}=await db.from('registrations').select('id,email,full_name,attendance_mode,overall_status,email_needs_update').eq('event_id',event.id);
-  const recipients=(regs||[]).filter(r=>!r.email_needs_update&&!String(r.email||'').endsWith('@migration.invalid')&&announcementMatches(r,audience));
+  // v0.8.3: email hanya untuk peserta aktif (bukan ditolak / mengundurkan diri) dengan email valid.
+  const {data:regs}=await db.from('registrations').select('id,email,full_name,attendance_mode,overall_status,lifecycle_status,email_needs_update').eq('event_id',event.id);
+  const recipients=(regs||[]).filter(r=>announcementRecipient(r,audience));
   const origin=new URL(request.url).origin;
   const html=announcementEmail({subject,bodyHtml,dashboardUrl:`${origin}/dashboard?tab=announcements`});
   let emailResult={ok:true,skipped:false};
