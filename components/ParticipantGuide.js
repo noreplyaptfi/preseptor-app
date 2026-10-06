@@ -12,11 +12,11 @@ function phasesFor(mode){
       {title:'Periksa nama & gelar',copy:'Nama dan gelar di Profil Saya akan tercetak di sertifikat. Perbaiki sekarang bila ada yang kurang tepat.',to:'profile',cta:'Profil Saya'},
       online
         ?{title:'Siapkan Zoom & virtual background',copy:'Buka Akses Acara untuk link Zoom. Unduh virtual background resmi dan pasang di aplikasi Zoom.',to:'backgrounds',cta:'Virtual Background'}
-        :{title:'Siapkan HP untuk presensi',copy:'Pastikan Anda bisa login ke dashboard dari HP. QR presensi muncul di menu Kehadiran saat jam presensi dibuka.',to:'attendance',cta:'Kehadiran'},
+        :{title:'Cek lokasi & siapkan HP',copy:'Lihat nama tempat, alamat, dan peta di menu Akses Acara. Pastikan Anda bisa login ke dashboard dari HP (Chrome/Safari). QR presensi hanya ada di menu Kehadiran dan muncul saat jam presensi dibuka.',to:'access',cta:'Lokasi'},
       {title:'Baca pengumuman panitia',copy:'Informasi jadwal, lokasi, dan perubahan teknis disampaikan melalui menu Pengumuman.',to:'announcements',cta:'Pengumuman'}
     ]},
     {id:'day1',chip:'Hari 1 · Rabu 7 Okt',title:'Presensi & Pretest',steps:[
-      {time:'07.00–09.00',title:'Presensi Hari 1',copy:online?'Buka menu Kehadiran, lalu tekan tombol Check-in Hari 1. Pastikan statusnya berubah menjadi Hadir.':'Buka menu Kehadiran dan tunjukkan QR Hari 1 kepada panitia di meja registrasi. Status berubah menjadi Hadir setelah dipindai.',to:'attendance',cta:'Kehadiran'},
+      {time:'07.00–09.00',title:'Presensi Hari 1',copy:online?'Buka menu Kehadiran, lalu tekan tombol Check-in Hari 1. Pastikan statusnya berubah menjadi Hadir.':'Buka menu Kehadiran dan tunjukkan QR Hari 1 kepada panitia di meja registrasi. Status berubah menjadi Hadir setelah dipindai. QR muncul otomatis pukul 07.00.',to:'attendance',cta:'Kehadiran'},
       {time:'08.00–10.00',title:'Kerjakan Pretest',copy:'Pretest dikerjakan saat sesi pembukaan (sesuai rundown 08.45–09.00). Pretest hanya bisa dikirim satu kali, jadi periksa jawaban sebelum mengirim.',to:'pretest',cta:'Pretest'},
       {title:'Ikuti sesi & unduh materi',copy:'Materi dari pemateri diunggah panitia setelah sesi dan dapat diunduh di menu Materi.',to:'materials',cta:'Materi'}
     ]},
