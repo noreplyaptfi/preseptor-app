@@ -8,7 +8,7 @@ import FlowPhases from './FlowPhases';
 
 const ACCESS={
   dayh:['super_admin'],pretest:['super_admin'],evaluation:['super_admin'],posttest:['super_admin'],certificates:['super_admin'],testaccounts:['super_admin'],
-  assets:['super_admin','event_admin'],announcements:null,access:null,participants:null,scan:null
+  assets:['super_admin','event_admin'],documentation:['super_admin','event_admin'],announcements:null,access:null,participants:null,scan:null
 };
 
 export const EVENT_FLOW=[
@@ -38,6 +38,7 @@ export const EVENT_FLOW=[
     {title:'Periksa status sertifikat',copy:'Menu Sertifikat menampilkan 8 syarat per peserta: aktif, dokumen valid, pembayaran terverifikasi, hadir Hari 1 & 2, Pretest, Evaluasi, dan Posttest lulus.',to:'certificates',cta:'Sertifikat'},
     {title:'Selesaikan kasus khusus',copy:'Untuk kendala yang sudah dikonfirmasi panitia (misalnya presensi gagal), gunakan Check-in manual bila masih relevan, atau Terbitkan manual dengan alasan yang jelas.',to:'certificates',cta:'Terbitkan manual'},
     {title:'Finalkan template & rilis',copy:'Cek teks sertifikat (penandatangan, tanggal, format nomor) lewat tombol Contoh. Setelah template final, klik Rilis ke peserta.',to:'certificates',cta:'Pengaturan template'},
+    {title:'Bagikan dokumentasi',copy:'Simpan foto & video di Google Drive / Google Photos / YouTube (akses: siapa saja yang memiliki link), lalu tempel tautannya di menu Dokumentasi. Bisa banyak tautan sekaligus dan dikelompokkan per hari.',to:'documentation',cta:'Dokumentasi'},
     {title:'Export laporan',copy:'Export Excel tersedia di Command Center (presensi), Pretest, Posttest (termasuk semua attempt), Evaluasi (rekap & jawaban), dan Sertifikat. Akun TEST tidak ikut export.',to:'dayh',cta:'Export presensi'}
   ]}
 ];

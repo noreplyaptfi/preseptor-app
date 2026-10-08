@@ -2,6 +2,7 @@
 import FeedbackBridge from './FeedbackBridge';
 import AdminSidebar from './AdminSidebar';
 import EventAssetsAdmin from './EventAssetsAdmin';
+import DocumentationAdmin from './DocumentationAdmin';
 import CertificatesAdmin from './CertificatesAdmin';
 import AdminGuide from './AdminGuide';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -61,7 +62,7 @@ export default function AdminDashboard(){
     setOpenNavGroup(current=>current===group?'':group)
   }
   useEffect(()=>{
-    const group=({participants:'participants',requests:'participants',special:'participants',refunds:'finance',settings:'registration',announcements:'registration',access:'event',dayh:'event',pretest:'event',evaluation:'event',posttest:'event',assets:'event',certificates:'event',masterdata:'system',homebases:'system',testaccounts:'system',team:'system',guide:'system'})[view];
+    const group=({participants:'participants',requests:'participants',special:'participants',refunds:'finance',settings:'registration',announcements:'registration',access:'event',dayh:'event',pretest:'event',evaluation:'event',posttest:'event',assets:'event',documentation:'event',certificates:'event',masterdata:'system',homebases:'system',testaccounts:'system',team:'system',guide:'system'})[view];
     if(group)setOpenNavGroup(group);
   },[view]);
   async function loadHomebases(){try{const j=await api('/api/admin/universities');setHomebases(j.universities||[])}catch(e){setError(e.message)}}
@@ -131,7 +132,7 @@ export default function AdminDashboard(){
     <AdminSidebar view={view} setView={setView} adminUser={adminUser} roleLabel={roleLabel} openNavGroup={openNavGroup} toggleNavGroup={toggleNavGroup} collapsed={sidebarCollapsed} toggleSidebar={toggleSidebar} logout={logout} counts={{queue:navQueue,requests:navCounts.requests,refunds:navCounts.refunds}}/>
 
     <main className="admin-main">
-      <header className="admin-header"><div><div className="eyebrow brand-blue">Dashboard Panitia</div><h1>{view==='overview'?'Ringkasan Kegiatan':view==='participants'?'Daftar Pendaftar':view==='settings'?'Pengaturan Pendaftaran':view==='announcements'?'Pengumuman':view==='access'?'Akses Pelaksanaan':view==='dayh'?'Command Center Hari-H':view==='pretest'?'Pretest':view==='evaluation'?'Evaluasi Pemateri':view==='posttest'?'Posttest':view==='assets'?'Materi & Virtual Background':view==='certificates'?'Sertifikat Peserta':view==='requests'?'Permintaan Peserta':view==='refunds'?'Manajemen Refund':view==='special'?'Peserta Khusus':view==='masterdata'?'Data Master Form':view==='homebases'?'Data Homebase':view==='testaccounts'?'Akun Uji Peserta':view==='guide'?'Panduan Panitia':'Tim Panitia'}</h1></div><div className="admin-header-actions"><a className="btn btn-secondary" href="/" target="_blank">Lihat Situs ↗</a></div></header>
+      <header className="admin-header"><div><div className="eyebrow brand-blue">Dashboard Panitia</div><h1>{view==='overview'?'Ringkasan Kegiatan':view==='participants'?'Daftar Pendaftar':view==='settings'?'Pengaturan Pendaftaran':view==='announcements'?'Pengumuman':view==='access'?'Akses Pelaksanaan':view==='dayh'?'Command Center Hari-H':view==='pretest'?'Pretest':view==='evaluation'?'Evaluasi Pemateri':view==='posttest'?'Posttest':view==='assets'?'Materi & Virtual Background':view==='documentation'?'Dokumentasi Kegiatan':view==='certificates'?'Sertifikat Peserta':view==='requests'?'Permintaan Peserta':view==='refunds'?'Manajemen Refund':view==='special'?'Peserta Khusus':view==='masterdata'?'Data Master Form':view==='homebases'?'Data Homebase':view==='testaccounts'?'Akun Uji Peserta':view==='guide'?'Panduan Panitia':'Tim Panitia'}</h1></div><div className="admin-header-actions"><a className="btn btn-secondary" href="/" target="_blank">Lihat Situs ↗</a></div></header>
       
       <FeedbackBridge notice={notice} error={error} onNotice={()=>setNotice('')}/>
 
@@ -169,6 +170,7 @@ export default function AdminDashboard(){
       {view==='evaluation'&&adminUser?.role==='super_admin'&&<AssessmentAdmin kind="evaluation"/>}
       {view==='posttest'&&adminUser?.role==='super_admin'&&<AssessmentAdmin kind="posttest"/>}
       {view==='assets'&&['super_admin','event_admin'].includes(adminUser?.role)&&<EventAssetsAdmin/>}
+      {view==='documentation'&&['super_admin','event_admin'].includes(adminUser?.role)&&<DocumentationAdmin/>}
       {view==='certificates'&&adminUser?.role==='super_admin'&&<CertificatesAdmin/>}
       {view==='testaccounts'&&adminUser?.role==='super_admin'&&<TestParticipantsAdmin/>}
 

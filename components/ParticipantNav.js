@@ -6,8 +6,9 @@ import BrandMark from './BrandMark';
 // v0.7.3 — Navigasi peserta: sidebar berkelompok dengan penanda status (desktop & drawer HP),
 // topbar HP, dan tombol bawah (Status · Hadir · Tes · Info · Menu).
 // v0.8.0 — + Virtual Background, Materi, Sertifikat, Panduan.
+// v0.8.4 — + Dokumentasi.
 
-export const TAB_LABELS={registration:'Status Pendaftaran',profile:'Profil Saya',attendance:'Kehadiran',access:'Akses Acara',pretest:'Pretest',evaluation:'Evaluasi',posttest:'Posttest',announcements:'Pengumuman',backgrounds:'Virtual Background',materials:'Materi',certificate:'Sertifikat',guide:'Panduan'};
+export const TAB_LABELS={registration:'Status Pendaftaran',profile:'Profil Saya',attendance:'Kehadiran',access:'Akses Acara',pretest:'Pretest',evaluation:'Evaluasi',posttest:'Posttest',announcements:'Pengumuman',backgrounds:'Virtual Background',materials:'Materi',documentation:'Dokumentasi',certificate:'Sertifikat',guide:'Panduan'};
 const TESTS=[['pretest','Pretest','edit'],['evaluation','Evaluasi','star'],['posttest','Posttest','check']];
 const MONTHS=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 
@@ -86,6 +87,7 @@ export function ParticipantSidebar({tab,select,data,summary,markers,unreadCount,
         <Item id="access" icon="play" label="Akses Acara"/>
         <Item id="backgrounds" icon="image" label="Virtual Background" extra={count(summary?.assets?.virtual_background)}/>
         <Item id="materials" icon="folder" label="Materi" extra={count(summary?.assets?.material)}/>
+        <Item id="documentation" icon="camera" label="Dokumentasi" extra={count(summary?.assets?.documentation)}/>
         <div className="nav-section">Assessment</div>
         {TESTS.map(([id,label,icon])=><Item key={id} id={id} icon={icon} label={label}/>)}
         <div className="nav-section">Penyelesaian</div>
@@ -136,7 +138,7 @@ export function ParticipantTabbar({tab,select,openMenu,unreadCount,markers}){
       <Tab active={!sheet&&tab==='attendance'} icon="calendar-check" label="Hadir" onClick={()=>go('attendance')} dot={markers.attendance?.type==='todo'}/>
       <Tab active={testActive||sheet} icon="tests" label="Tes" onClick={()=>setSheet(v=>!v)} dot={testTodo}/>
       <Tab active={!sheet&&tab==='announcements'} icon="bell" label="Info" onClick={()=>go('announcements')} badge={unreadCount}/>
-      <Tab active={!sheet&&['profile','access','backgrounds','materials','guide'].includes(tab)} icon="menu" label="Menu" onClick={()=>{setSheet(false);openMenu()}}/>
+      <Tab active={!sheet&&['profile','access','backgrounds','materials','documentation','guide'].includes(tab)} icon="menu" label="Menu" onClick={()=>{setSheet(false);openMenu()}}/>
     </nav>
     {sheet&&<>
       <button type="button" className="sheet-backdrop" onClick={()=>setSheet(false)} aria-label="Tutup"/>

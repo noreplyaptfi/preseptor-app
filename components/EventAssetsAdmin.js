@@ -35,7 +35,7 @@ export default function EventAssetsAdmin(){
   const all=data?.assets||[];
   const list=useMemo(()=>all.filter(a=>a.kind===tab),[all,tab]);
   const count=k=>all.filter(a=>a.kind===k).length;
-  const downloads=all.reduce((s,a)=>s+Number(a.download_count||0),0);
+  const downloads=all.filter(a=>ASSET_KINDS[a.kind]).reduce((s,a)=>s+Number(a.download_count||0),0);
 
   async function remove(a){
     if(!await confirmDialog({title:`Hapus ${a.kind==='material'?'materi':'virtual background'}?`,description:`"${a.title}" akan dihapus permanen dan tidak bisa lagi diunduh peserta.`,confirmLabel:'Hapus',tone:'danger'}))return;

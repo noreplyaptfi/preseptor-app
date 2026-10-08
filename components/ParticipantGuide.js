@@ -27,7 +27,8 @@ function phasesFor(mode){
     ]},
     {id:'after',chip:'Setelah acara',title:'Sertifikat',steps:[
       {title:'Cek syarat sertifikat',copy:'Menu Sertifikat menampilkan 8 syarat: pendaftaran aktif, dokumen valid, pembayaran terverifikasi, hadir Hari 1 & 2, Pretest, Evaluasi, dan Posttest lulus.',to:'certificate',cta:'Sertifikat'},
-      {title:'Unduh sertifikat',copy:'Sertifikat dapat diunduh dalam format PDF setelah dirilis panitia. Setiap sertifikat memiliki QR code untuk verifikasi keaslian.',to:'certificate',cta:'Sertifikat'}
+      {title:'Unduh sertifikat',copy:'Sertifikat dapat diunduh dalam format PDF setelah dirilis panitia. Setiap sertifikat memiliki QR code untuk verifikasi keaslian.',to:'certificate',cta:'Sertifikat'},
+      {title:'Lihat dokumentasi',copy:'Foto dan video kegiatan dibagikan panitia di menu Dokumentasi, dikelompokkan per hari.',to:'documentation',cta:'Dokumentasi'}
     ]}
   ];
 }

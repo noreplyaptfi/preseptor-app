@@ -3,9 +3,10 @@ import { requireAdmin } from '../../../../lib/auth';
 import { getSupabaseAdmin } from '../../../../lib/supabase-admin';
 import { logActivity } from '../../../../lib/audit';
 import { safeFileName,validateFileSignature } from '../../../../lib/validation';
-import { ASSET_BUCKET,ASSET_KINDS,validateAssetFile,validLink,guessMime } from '../../../../lib/event-assets';
+import { ASSET_BUCKET,ASSET_KINDS,ALL_ASSET_KINDS,LINK_ONLY_KINDS,DOC_BULK_MAX,validateAssetFile,validLink,guessMime } from '../../../../lib/event-assets';
 
 // v0.8.0 — Admin virtual background & materi (Super Admin, Admin Event).
+// v0.8.4 — + Dokumentasi (kind 'documentation', khusus tautan, group_label, tambah banyak tautan sekaligus).
 // Upload langsung ke Supabase Storage lewat signed upload URL (tidak melewati batas body Vercel).
 export const dynamic='force-dynamic';
 const ROLES=['super_admin','event_admin'];
@@ -74,12 +75,37 @@ export async function POST(request){
     return NextResponse.json({path,token:data.token,type:file.type});
   }
 
+  if(action==='create_links'){
+    if(!LINK_ONLY_KINDS.includes(kind))return fail('Tambah banyak tautan hanya untuk dokumentasi.',422);
+    const items=Array.isArray(b.items)?b.items:[];
+    if(!items.length)return fail('Belum ada tautan untuk disimpan.',422);
+    if(items.length>DOC_BULK_MAX)return fail(`Maksimal ${DOC_BULK_MAX} tautan sekali simpan.`,422);
+    const audience=AUDIENCES.includes(b.audience)?b.audience:'all';
+    const group=clean(b.group_label,80)||null;
+    const rows=[],errors=[];
+    items.forEach((it,i)=>{
+      const title=clean(it?.title,160),url=validLink(it?.link_url);
+      if(title.length<2||!url){errors.push({index:i,message:!url?'Tautan tidak valid':'Judul terlalu pendek'});return}
+      rows.push({event_id:c.event.id,kind,title,description:clean(it?.description,500)||null,link_url:url,group_label:group,audience,published:b.published!==false,uploaded_by:c.auth.user.email});
+    });
+    if(errors.length)return NextResponse.json({message:`${errors.length} baris belum valid. Perbaiki lalu simpan lagi.`,errors},{status:422});
+    const {data:last}=await c.db.from('event_assets').select('position').eq('event_id',c.event.id).eq('kind',kind).order('position',{ascending:false}).limit(1).maybeSingle();
+    let pos=Number(last?.position||0);
+    for(const r of rows)r.position=++pos;
+    const {data,error}=await c.db.from('event_assets').insert(rows).select('id');
+    if(error)return fail(/group_label|event_assets_kind_check|documentation/.test(error.message||'')?'Fitur dokumentasi belum aktif. Jalankan migration 022 terlebih dahulu.':'Tautan gagal disimpan.');
+    await logActivity({actorType:'admin',actorEmail:c.auth.user.email,action:'event_asset_links_created',metadata:{kind,count:rows.length,group_label:group}});
+    return NextResponse.json({ok:true,created:(data||[]).length});
+  }
+
   if(action==='create'||action==='create_link'){
-    if(!ASSET_KINDS[kind])return fail('Jenis aset tidak dikenal.',422);
+    if(!ALL_ASSET_KINDS.includes(kind))return fail('Jenis aset tidak dikenal.',422);
+    if(action==='create'&&LINK_ONLY_KINDS.includes(kind))return fail('Dokumentasi hanya berupa tautan.',422);
     const title=clean(b.title,160);
     if(title.length<2)return fail('Judul wajib diisi.',422);
     const audience=AUDIENCES.includes(b.audience)?b.audience:'all';
     const row={event_id:c.event.id,kind,title,description:clean(b.description,500)||null,audience,published:b.published!==false,uploaded_by:c.auth.user.email};
+    if(LINK_ONLY_KINDS.includes(kind))row.group_label=clean(b.group_label,80)||null;
     if(action==='create'){
       const path=String(b.path||'');
       if(!path.startsWith(`${c.event.id}/${kind}/`))return fail('Lokasi file tidak valid.',422);
@@ -90,7 +116,7 @@ export async function POST(request){
       if(verr)return fail(verr,422);
       Object.assign(row,{storage_path:path,original_name:file.name.slice(0,200),mime_type:file.type,file_size:file.size});
     }else{
-      if(kind!=='material')return fail('Tautan hanya untuk materi.',422);
+      if(!['material',...LINK_ONLY_KINDS].includes(kind))return fail('Tautan hanya untuk materi dan dokumentasi.',422);
       const url=validLink(b.link_url);
       if(!url)return fail('Tautan harus diawali https:// atau http://',422);
       row.link_url=url;
@@ -100,7 +126,7 @@ export async function POST(request){
     const {data,error}=await c.db.from('event_assets').insert(row).select('*').single();
     if(error){
       if(row.storage_path)await c.db.storage.from(ASSET_BUCKET).remove([row.storage_path]).catch(()=>{});
-      return fail('Aset gagal disimpan.');
+      return fail(/group_label|event_assets_kind_check|documentation/.test(error.message||'')?'Fitur dokumentasi belum aktif. Jalankan migration 022 terlebih dahulu.':'Aset gagal disimpan.');
     }
     await logActivity({actorType:'admin',actorEmail:c.auth.user.email,action:'event_asset_created',metadata:{kind,asset_id:data.id,title}});
     return NextResponse.json({ok:true,asset:data});
@@ -108,11 +134,20 @@ export async function POST(request){
 
   if(action==='move'){
     const id=String(b.id||''),dir=b.direction==='up'?-1:1;
-    const {data:asset}=await c.db.from('event_assets').select('id,kind,position').eq('id',id).eq('event_id',c.event.id).maybeSingle();
+    const {data:asset}=await c.db.from('event_assets').select('*').eq('id',id).eq('event_id',c.event.id).maybeSingle();
     if(!asset)return fail('Aset tidak ditemukan.',404);
-    const {data:list}=await c.db.from('event_assets').select('id,position').eq('event_id',c.event.id).eq('kind',asset.kind).order('position').order('created_at');
-    const items=list||[],i=items.findIndex(x=>x.id===id),j=i+dir;
+    const {data:list}=await c.db.from('event_assets').select('*').eq('event_id',c.event.id).eq('kind',asset.kind).order('position').order('created_at');
+    // Dokumentasi: urutan berlaku di dalam kelompok yang sama.
+    const items=(list||[]).filter(x=>!LINK_ONLY_KINDS.includes(asset.kind)||(x.group_label||'')===(asset.group_label||'')),i=items.findIndex(x=>x.id===id),j=i+dir;
     if(i<0||j<0||j>=items.length)return NextResponse.json({ok:true});
+    if(LINK_ONLY_KINDS.includes(asset.kind)){
+      // Tukar posisi dua item dalam kelompok (posisi unik per kind tetap terjaga).
+      const a1=items[i],a2=items[j],now=new Date().toISOString();
+      const p1=a1.position===a2.position?a2.position+(dir>0?1:-1):a2.position;
+      await c.db.from('event_assets').update({position:Math.max(1,p1),updated_at:now}).eq('id',a1.id);
+      await c.db.from('event_assets').update({position:a1.position,updated_at:now}).eq('id',a2.id);
+      return NextResponse.json({ok:true});
+    }
     [items[i],items[j]]=[items[j],items[i]];
     for(let k=0;k<items.length;k++){
       if(items[k].position!==k+1)await c.db.from('event_assets').update({position:k+1,updated_at:new Date().toISOString()}).eq('id',items[k].id);
@@ -135,6 +170,7 @@ export async function PATCH(request){
   if(Object.prototype.hasOwnProperty.call(b,'description'))patch.description=clean(b.description,500)||null;
   if(Object.prototype.hasOwnProperty.call(b,'audience')){if(!AUDIENCES.includes(b.audience))return fail('Sasaran peserta tidak valid.',422);patch.audience=b.audience}
   if(Object.prototype.hasOwnProperty.call(b,'published'))patch.published=!!b.published;
+  if(Object.prototype.hasOwnProperty.call(b,'group_label')&&LINK_ONLY_KINDS.includes(asset.kind))patch.group_label=clean(b.group_label,80)||null;
   if(Object.prototype.hasOwnProperty.call(b,'link_url')&&!asset.storage_path){const url=validLink(b.link_url);if(!url)return fail('Tautan tidak valid.',422);patch.link_url=url}
   const {error}=await c.db.from('event_assets').update(patch).eq('id',id);
   if(error)return fail('Aset gagal diperbarui.');

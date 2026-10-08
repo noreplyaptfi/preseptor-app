@@ -1361,3 +1361,57 @@ h1,h2,h3,h4,.brand,.btn,.status,.eyebrow{font-family:var(--font-lato),Lato,Arial
 /* ===== v0.8.3 — Pengumuman: jumlah penerima email ===== */
 .announcement-recipient-hint{display:block;margin-top:7px;font-size:12px;color:var(--muted);line-height:1.5}
 .announcement-recipient-hint b{color:#11185d}
+
+/* ===== v0.8.4 — Dokumentasi (tautan) ===== */
+.docs-add-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(240px,1fr);gap:18px;align-items:start}
+.docs-add-main textarea{min-height:170px;font-family:inherit;line-height:1.5;resize:vertical}
+.docs-add-side{display:grid;gap:4px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#fbfcff}
+.docs-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.docs-chips button{border:1px solid #cdd9ee;background:#fff;color:#33456b;border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.docs-chips button.active{background:#11185d;border-color:#11185d;color:#fff}
+.docs-preview{margin-top:12px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.docs-preview-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;background:#f3f6fc;font-size:13px}
+.docs-preview ol{margin:0;padding:6px 14px 10px 36px;max-height:260px;overflow:auto;display:grid;gap:4px}
+.docs-preview li{font-size:13px;color:#11185d}
+.docs-preview li small{display:block;color:var(--muted);font-size:11px}
+.docs-preview li.bad{color:#b91c1c}
+.docs-preview li.bad small{color:#b91c1c}
+.docs-preview-title{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.docs-preview-more{display:block;padding:0 14px 10px;color:var(--muted)}
+.docs-filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.docs-filters .search-box{flex:1 1 260px}
+.docs-filters select{flex:0 1 220px}
+.docs-group{margin-top:14px}
+.docs-group+.docs-group{padding-top:14px;border-top:1px dashed var(--line)}
+.docs-group-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.docs-group-head h3{margin:0;font-size:15px;color:#11185d;display:flex;align-items:center;gap:8px}
+.docs-group-head h3 span,.docs-group-title span{font-size:11px;font-weight:800;background:#edf3ff;color:#1d4ed8;border-radius:999px;padding:2px 8px}
+.docs-group-actions{display:flex;gap:12px}
+.asset-type.doc-youtube{color:#dc2626}
+.asset-type.doc-photos,.asset-type.doc-drive{color:#15803d}
+.asset-main small a{color:#1d4ed8;text-decoration:none}
+.asset-main small a:hover{text-decoration:underline}
+.docs-participant{display:grid;gap:16px}
+.docs-search{margin-top:14px}
+.docs-group-title{margin:0 0 12px;font-size:16px;color:#11185d;display:flex;align-items:center;gap:8px}
+.docs-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.docs-card{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fbfcff;color:inherit;text-decoration:none;transition:border-color .15s,box-shadow .15s,transform .15s}
+.docs-card:hover{border-color:#9db8ef;box-shadow:0 8px 20px rgba(17,24,93,.08);transform:translateY(-1px)}
+.docs-card:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(24,87,232,.18)}
+.docs-card-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#edf3ff;color:#1d4ed8}
+.doc-youtube .docs-card-icon{background:#fdecec;color:#dc2626}
+.doc-photos .docs-card-icon,.doc-drive .docs-card-icon{background:#e8f6ee;color:#15803d}
+.docs-card-body{min-width:0}
+.docs-card-body strong{display:block;color:#11185d;font-size:14px;line-height:1.35}
+.docs-card-body small{display:block;color:var(--muted);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.docs-card-body em{display:block;font-style:normal;font-size:11px;font-weight:700;color:#64748b;margin-top:3px}
+.docs-card-open{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:#1d4ed8;white-space:nowrap}
+@media(max-width:900px){.docs-add-grid{grid-template-columns:1fr}}
+@media(max-width:760px){
+  .docs-grid{grid-template-columns:1fr}
+  .docs-card{grid-template-columns:38px minmax(0,1fr)}
+  .docs-card-icon{width:38px;height:38px}
+  .docs-card-open{grid-column:2}
+  .docs-filters select{flex:1 1 100%}
+  .docs-group-actions{width:100%}
+}

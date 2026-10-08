@@ -5,6 +5,7 @@ import { participantEligible,isTestRegistration } from '../../../../lib/day-h';
 import { ASSET_BUCKET,assetVisibleFor,downloadName } from '../../../../lib/event-assets';
 
 // v0.8.0 — Virtual background & materi untuk peserta terverifikasi (dan akun TEST).
+// v0.8.4 — + dokumentasi (tautan).
 export const dynamic='force-dynamic';
 const NO_STORE={headers:{'Cache-Control':'private, no-store'}};
 
@@ -14,7 +15,7 @@ async function load(db,email){
 }
 
 function publicAsset(a,preview){
-  return {id:a.id,kind:a.kind,title:a.title,description:a.description,original_name:a.original_name,mime_type:a.mime_type,file_size:a.file_size,is_link:!a.storage_path&&!!a.link_url,link_url:!a.storage_path?a.link_url:null,preview_url:preview||null,created_at:a.created_at};
+  return {id:a.id,kind:a.kind,title:a.title,description:a.description,group_label:a.group_label||null,original_name:a.original_name,mime_type:a.mime_type,file_size:a.file_size,is_link:!a.storage_path&&!!a.link_url,link_url:!a.storage_path?a.link_url:null,preview_url:preview||null,created_at:a.created_at};
 }
 
 export async function GET(request){
@@ -26,7 +27,7 @@ export async function GET(request){
   const kind=new URL(request.url).searchParams.get('kind');
   if(!participantEligible(reg))return NextResponse.json({locked:true,mode:reg.attendance_mode,assets:[]},NO_STORE);
   let q=db.from('event_assets').select('*').eq('event_id',reg.event_id).eq('published',true);
-  if(['virtual_background','material'].includes(kind))q=q.eq('kind',kind);
+  if(['virtual_background','material','documentation'].includes(kind))q=q.eq('kind',kind);
   const {data,error}=await q.order('position').order('created_at');
   if(error)return NextResponse.json({locked:false,mode:reg.attendance_mode,assets:[],message:'Belum tersedia.'},NO_STORE);
   const visible=(data||[]).filter(a=>assetVisibleFor(a,reg.attendance_mode));

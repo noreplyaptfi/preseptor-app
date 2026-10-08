@@ -56,7 +56,7 @@ export async function GET(request){
   }
 
   // v0.8.0 — status sertifikat & jumlah aset untuk penanda menu.
-  let certificate=null,assets={virtual_background:0,material:0};
+  let certificate=null,assets={virtual_background:0,material:0,documentation:0};
   try{
     const byKind=Object.fromEntries((modules||[]).map(m=>[m.kind,m]));
     const grouped={};for(const a of attempts)(grouped[a.assessment_id]||=[]).push(a);
