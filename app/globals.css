@@ -1482,3 +1482,43 @@ input.nik-mono{font-size:16px}
   .nik-form-actions .btn{flex:1 1 auto}
 }
 @media(max-width:700px){.admin-filters.has-skp{grid-template-columns:1fr}}
+
+/* v0.8.6 — Sertifikat: pemateri & moderator, tanda tangan & cap, halaman 2 */
+.recipients-panel .recipient-group{margin-top:18px}
+.recipients-panel .recipient-group h3{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:15px;color:#11185d}
+.recipients-panel .recipient-group h3 span{font-size:11px;font-weight:800;background:#edf3ff;color:#1d4ed8;border-radius:999px;padding:2px 8px}
+.recipient-empty{font-size:13px;margin:0}
+.recipient-table td{vertical-align:top}
+.recipient-table td strong{display:block;color:#11185d}
+.recipient-table td .status{display:inline-flex;margin-right:4px}
+.recipient-move{display:inline-grid;gap:2px}
+.recipient-move button{border:1px solid var(--line);background:#fff;border-radius:6px;font-size:9px;line-height:1;padding:3px 6px;color:#4a5b7d;cursor:pointer}
+.recipient-move button:disabled{opacity:.35;cursor:default}
+.recipient-form{display:grid;gap:4px;text-align:left}
+.signature-card{display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2)}
+.signature-preview{height:120px;border-radius:10px;border:1px dashed #c7d4ea;background:#fff repeating-conic-gradient(#f3f6fb 0% 25%,#fff 0% 50%) 50%/16px 16px;display:grid;place-items:center;overflow:hidden}
+.signature-preview img{max-width:100%;max-height:100%;object-fit:contain}
+.signature-preview span{font-size:12px;color:var(--muted)}
+.signature-body h3{margin:0 0 4px;font-size:15px;color:#11185d}
+.signature-body p{margin:0 0 10px;font-size:13px;color:var(--muted);line-height:1.5}
+.signature-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.signature-actions label.btn{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.signature-actions label.btn.disabled{opacity:.5;pointer-events:none}
+.cert-settings-group{border:1px solid var(--line);border-radius:14px;padding:14px 16px 4px;margin:0;min-width:0}
+.cert-settings-group legend{padding:0 6px;font-weight:850;font-size:13px;color:#11185d}
+.cert-settings-group>p{margin:0 0 12px;font-size:12px;line-height:1.5}
+.cert-settings-group .span-2{grid-column:1/-1}
+.syllabus-input{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.6}
+.syllabus-preview{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.syllabus-preview th{background:#11185d;color:#fff;text-align:left;padding:7px 10px;font-weight:800}
+.syllabus-preview th:last-child,.syllabus-preview td:last-child{text-align:center;width:120px}
+.syllabus-preview td{padding:6px 10px;border-bottom:1px solid #e3eaf6}
+.syllabus-preview tbody tr:nth-child(even) td{background:#f6f9ff}
+.syllabus-preview tfoot td{font-weight:850;color:#11185d;background:#eef4ff}
+.numbering-note{font-size:12px;margin:12px 0 0;text-align:left}
+@media(max-width:760px){
+  .signature-card{grid-template-columns:1fr}
+  .recipient-table td:nth-child(3){display:none}
+  .recipient-table th:nth-child(3){display:none}
+}
+.recipient-table td.num,.recipient-table th.num{width:64px;text-align:center}

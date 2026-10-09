@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '../../../../lib/auth';
 import { getSupabaseAdmin } from '../../../../lib/supabase-admin';
 import { logActivity } from '../../../../lib/audit';
-import { CERTIFICATE_DEFAULTS,CERTIFICATE_FIELDS,certificateConfig,formatCertificateNo,STATUS_LABEL } from '../../../../lib/certificate';
-import { certificateEvent,allCertificates,registrationById,publicCertificate,isTestReg,participantCertificate } from '../../../../lib/certificate-data';
+import { CERTIFICATE_DEFAULTS,CERTIFICATE_FIELDS,certificateConfig,certificateNumber,parseSyllabus,STATUS_LABEL } from '../../../../lib/certificate';
+import { certificateEvent,allCertificates,registrationById,publicCertificate,isTestReg,participantCertificate,listRecipients,recipientCertificates,recipientView,assignNumbers } from '../../../../lib/certificate-data';
 import { displayName } from '../../../../lib/profile';
 
 // v0.8.0 — Admin sertifikat (Super Admin): status semua peserta, pengaturan rilis & template, terbit manual, cabut.
+// v0.8.6 — + pemateri & moderator, tanda tangan & cap, nomor awal, siapkan nomor sekaligus.
 export const dynamic='force-dynamic';
 const NO_STORE={headers:{'Cache-Control':'private, no-store'}};
 
@@ -68,6 +69,12 @@ export async function GET(request){
       ]);
       return NextResponse.json({filename:'sertifikat-preseptor-2026.xlsx',sheet:'Sertifikat',columns,rows:out},NO_STORE);
     }
+    // v0.8.6 — pemateri & moderator (null bila migration 024 belum dijalankan).
+    let recipients=null;
+    try{
+      const [list,certs]=await Promise.all([listRecipients(c.db,c.event.id),recipientCertificates(c.db,c.event.id)]);
+      recipients=list.map(r=>recipientView(r,certs.get(r.id)||null,data.config,request));
+    }catch{}
     const stats={
       participants:official.length,
       eligible:official.filter(r=>r.eligible).length,
@@ -80,7 +87,11 @@ export async function GET(request){
       released:!!c.event.certificate_enabled,
       config:data.config,
       defaults:CERTIFICATE_DEFAULTS,
-      sampleNumber:formatCertificateNo(data.config.number_format,1,false),
+      sampleNumber:certificateNumber(data.config,1,false),
+      signature:{exists:!!data.config.signature_path,updated_at:data.config.signature_updated_at||null},
+      syllabus:{id:parseSyllabus(data.config.syllabus_text),en:parseSyllabus(data.config.syllabus_text_en)},
+      numbered:{participants:official.filter(r=>r.certificate).length,recipients:(recipients||[]).filter(r=>r.certificate).length,readyParticipants:official.filter(r=>['ready','waiting_release'].includes(r.status)).length},
+      recipients,
       stats,rows
     },NO_STORE);
   }catch(e){return fail(e.message||'Data sertifikat gagal dimuat.')}
@@ -94,8 +105,10 @@ export async function PATCH(request){
   if(Object.prototype.hasOwnProperty.call(b,'certificate_enabled'))patch.certificate_enabled=!!b.certificate_enabled;
   if(b.config&&typeof b.config==='object'){
     const merged=certificateConfig({...(c.event.certificate_config||{}),...b.config});
-    if(!/\{N+\}/.test(merged.number_format))return fail('Format nomor wajib memuat {NNN} sebagai nomor urut, contoh {NNN}/APTFI/PRESEPTOR/X/2026.',422);
-    const stored={};
+    if(!/\{N+\}/.test(merged.number_format))return fail('Format nomor wajib memuat {NNN} sebagai nomor urut, contoh {NNN}/X/SERTIF/APTFI/2026.',422);
+    if(!parseSyllabus(merged.syllabus_text).rows.length)return fail('Tabel materi halaman 2 belum valid. Tulis satu materi per baris dengan format: Materi | 1,5',422);
+    // Kunci di luar daftar field (mis. path tanda tangan) tetap dipertahankan.
+    const stored={...(c.event.certificate_config||{})};
     for(const [key] of CERTIFICATE_FIELDS)stored[key]=merged[key];
     patch.certificate_config=stored;
   }
@@ -111,6 +124,18 @@ export async function POST(request){
   if(c.response)return c.response;
   const b=await request.json().catch(()=>({}));
   const action=String(b.action||'');
+
+  // v0.8.6 — siapkan nomor sekaligus: pemateri → moderator → peserta (abjad).
+  if(action==='assign_numbers'){
+    const renumber=b.renumber===true;
+    if(renumber&&c.event.certificate_enabled)return fail('Nomor tidak bisa disusun ulang setelah sertifikat dirilis. Gunakan "beri nomor yang belum punya".',409);
+    try{
+      const out=await assignNumbers(c.db,c.event,{renumber,actor:c.auth.user.email});
+      await logActivity({actorType:'admin',actorEmail:c.auth.user.email,action:'certificate_numbers_assigned',metadata:{renumber,...out}});
+      return NextResponse.json({ok:true,...out});
+    }catch(e){return fail(e.message)}
+  }
+
   const reg=await registrationById(c.db,String(b.registrationId||''));
   if(!reg||reg.event_id!==c.event.id)return fail('Peserta tidak ditemukan.',404);
   const reason=String(b.reason||'').trim().slice(0,500);

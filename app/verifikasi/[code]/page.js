@@ -1,8 +1,9 @@
 import PublicHeader from '../../../components/PublicHeader';
 import { getSupabaseAdmin } from '../../../lib/supabase-admin';
-import { certificateConfig,formatCertificateNo } from '../../../lib/certificate';
+import { certificateConfig,certificateNumber,RECIPIENT_ROLES } from '../../../lib/certificate';
 
 // v0.8.0 — Verifikasi keaslian sertifikat (publik). Dibuka dari QR code di sertifikat.
+// v0.8.6 — + sertifikat pemateri & moderator.
 export const dynamic='force-dynamic';
 export const metadata={title:'Verifikasi Sertifikat · APTFI Preseptor',robots:{index:false,follow:false}};
 
@@ -11,20 +12,23 @@ function fmtDate(v){if(!v)return '—';try{return new Intl.DateTimeFormat('id-ID
 async function lookup(code){
   if(!/^[A-Z0-9]{6,20}$/.test(code))return null;
   const db=getSupabaseAdmin();
-  const {data:cert}=await db.from('certificates').select('id,event_id,registration_id,serial,is_test,name_on_certificate,issued_at,revoked_at').eq('verify_code',code).maybeSingle();
+  const {data:cert}=await db.from('certificates').select('*').eq('verify_code',code).maybeSingle();
   if(!cert)return null;
-  const [{data:event},{data:reg}]=await Promise.all([
+  const [{data:event},{data:reg},{data:recipient}]=await Promise.all([
     db.from('events').select('title,certificate_config').eq('id',cert.event_id).maybeSingle(),
-    db.from('registrations').select('full_name,attendance_mode').eq('id',cert.registration_id).maybeSingle()
+    cert.registration_id?db.from('registrations').select('full_name,attendance_mode').eq('id',cert.registration_id).maybeSingle():Promise.resolve({data:null}),
+    cert.recipient_id?db.from('certificate_recipients').select('name,role,attendance_mode').eq('id',cert.recipient_id).maybeSingle():Promise.resolve({data:null})
   ]);
   const config=certificateConfig(event?.certificate_config);
+  const mode=recipient?recipient.attendance_mode:reg?.attendance_mode;
   return {
-    name:cert.name_on_certificate||reg?.full_name||'—',
-    number:formatCertificateNo(config.number_format,cert.serial,cert.is_test),
+    name:cert.name_on_certificate||recipient?.name||reg?.full_name||'—',
+    role:recipient?(RECIPIENT_ROLES[recipient.role]?.label||'—'):'Peserta',
+    number:certificateNumber(config,cert.serial,cert.is_test),
     eventName:config.event_name,
     organizer:config.organizer,
     dateText:config.date_text,
-    mode:reg?.attendance_mode==='Offline'?`Luring · ${config.location_text}`:'Daring · Zoom Meeting',
+    mode:mode==='Offline'?`Luring · ${config.location_text}`:mode==='Online'?'Daring · Zoom Meeting':'',
     issuedAt:cert.issued_at,
     revoked:!!cert.revoked_at,
     test:!!cert.is_test
@@ -52,10 +56,11 @@ export default async function VerifyCertificate({params}){
         <p>{copy.text}</p>
         {c&&<dl className="verify-data">
           <div><dt>Nama</dt><dd>{c.name}</dd></div>
+          <div><dt>Peran</dt><dd>{c.role}</dd></div>
           <div><dt>Nomor sertifikat</dt><dd>{c.number}</dd></div>
           <div><dt>Kegiatan</dt><dd>{c.eventName}</dd></div>
           <div><dt>Penyelenggara</dt><dd>{c.organizer}</dd></div>
-          <div><dt>Pelaksanaan</dt><dd>{c.dateText} · {c.mode}</dd></div>
+          <div><dt>Pelaksanaan</dt><dd>{c.dateText}{c.mode?` · ${c.mode}`:''}</dd></div>
           <div><dt>Diterbitkan</dt><dd>{fmtDate(c.issuedAt)}</dd></div>
         </dl>}
         <small className="verify-code">Kode verifikasi: {code||'—'}</small>
