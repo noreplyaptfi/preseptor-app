@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import writeExcelFile from 'write-excel-file/node';
 import { requireAdmin } from '../../../../lib/auth';
 import { getSupabaseAdmin } from '../../../../lib/supabase-admin';
+import { nikRowsForEvent } from '../../../../lib/nik-data';
 
 export const runtime='nodejs';
 
-const HEADERS=['No','Nomor Pendaftaran','Nama','Email','Status Email','WhatsApp','Nomor STRA','Homebase','Kategori','Tempat Praktik','Mode','Status Persyaratan','Status Pembayaran','Status Akhir','Biaya','Tanggal Daftar','Tanggal Verifikasi Bayar','Sumber'];
-const WIDTHS=[6,25,30,30,18,18,20,34,22,32,12,20,20,20,16,22,24,16];
+// v0.8.5 — + kolom SKP (Ya/Tidak) dan NIK. NIK ditulis sebagai teks agar 16 digit tidak dibulatkan Excel.
 const BORDER={style:'hair',color:'#E2E8F0'};
 function text(value){return value==null?'':String(value)}
 function dateId(value){
@@ -14,6 +14,32 @@ function dateId(value){
   try{return new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Jakarta'}).format(new Date(value))}catch{return ''}
 }
 function cell(value,extra={}){return {value:text(value),wrap:true,alignVertical:'top',...extra}}
+function email(r){return r.email_needs_update?(r.legacy_contact_email||r.email):r.email}
+
+// [judul kolom, lebar, nilai(r, nomor, nikRow)]
+const COLUMNS=[
+  ['No',6,(r,i)=>i+1],
+  ['Nomor Pendaftaran',25,r=>r.registration_code],
+  ['Nama',30,r=>r.full_name],
+  ['Email',30,r=>email(r)],
+  ['Status Email',18,r=>r.email_needs_update?'PERLU DIPERBARUI':'OK'],
+  ['WhatsApp',18,r=>r.whatsapp],
+  ['Nomor STRA',20,r=>r.stra_number||''],
+  ['SKP',8,r=>r.skp_eligible?'Ya':'Tidak'],
+  ['NIK',20,(r,i,n)=>n?.nik||''],
+  ['Homebase',34,r=>r.university||''],
+  ['Kategori',22,r=>r.participant_type||''],
+  ['Tempat Praktik',32,r=>[r.practice_type,r.practice_name].filter(Boolean).join(' - ')],
+  ['Mode',12,r=>r.attendance_mode||''],
+  ['Status Persyaratan',20,r=>r.requirements_status],
+  ['Status Pembayaran',20,r=>r.payment_status],
+  ['Status Akhir',20,r=>r.overall_status],
+  ['Biaya',16,r=>Number(r.amount_due||1000000),'money'],
+  ['Tanggal Daftar',22,r=>dateId(r.created_at)],
+  ['Tanggal Verifikasi Bayar',24,r=>dateId(r.payment_verified_at)],
+  ['NIK Diperbarui',22,(r,i,n)=>dateId(n?.updated_at)],
+  ['Sumber',16,r=>r.legacy_source||'webapp']
+];
 
 export async function POST(request){
   const auth=await requireAdmin(request,['super_admin','event_admin']);
@@ -27,26 +53,25 @@ export async function POST(request){
   if(eventError||!event) return NextResponse.json({message:'Event tidak ditemukan.'},{status:404});
   let query=db.from('registrations').select('*').eq('event_id',event.id).order('created_at',{ascending:true});
   if(Array.isArray(ids)) query=query.in('id',ids);
-  const {data,error}=await query;
+  const [{data,error},nikData]=await Promise.all([query,nikRowsForEvent(db,event.id)]);
   if(error) return NextResponse.json({message:'Gagal membaca data pendaftar.'},{status:500});
 
-  const titleRow=[{value:'DATA PENDAFTAR PELATIHAN PRESEPTOR APTFI 2026',columnSpan:18,fontWeight:'bold',fontSize:14,textColor:'#11185D',height:28},...Array(17).fill(null)];
+  const span=COLUMNS.length;
+  const titleRow=[{value:'DATA PENDAFTAR PELATIHAN PRESEPTOR APTFI 2026',columnSpan:span,fontWeight:'bold',fontSize:14,textColor:'#11185D',height:28},...Array(span-1).fill(null)];
   const exportedAt=`Diekspor: ${new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Jakarta'}).format(new Date())}`;
-  const metaRow=[{value:exportedAt,columnSpan:18,fontSize:9,textColor:'#657395'},...Array(17).fill(null)];
-  const emptyRow=Array(18).fill(null);
-  const headerRow=HEADERS.map(h=>({value:h,fontWeight:'bold',textColor:'#FFFFFF',backgroundColor:'#11185D',alignVertical:'center',height:24,wrap:true}));
+  const metaRow=[{value:exportedAt,columnSpan:span,fontSize:9,textColor:'#657395'},...Array(span-1).fill(null)];
+  const emptyRow=Array(span).fill(null);
+  const headerRow=COLUMNS.map(([h])=>({value:h,fontWeight:'bold',textColor:'#FFFFFF',backgroundColor:'#11185D',alignVertical:'center',height:24,wrap:true}));
   const rows=(data||[]).map((r,i)=>{
-    const values=[
-      i+1,r.registration_code,r.full_name,(r.email_needs_update?(r.legacy_contact_email||r.email):r.email),(r.email_needs_update?'PERLU DIPERBARUI':'OK'),r.whatsapp,r.stra_number||'',r.university||'',r.participant_type||'',
-      [r.practice_type,r.practice_name].filter(Boolean).join(' - '),r.attendance_mode||'',r.requirements_status,r.payment_status,r.overall_status,
-      Number(r.amount_due||1000000),dateId(r.created_at),dateId(r.payment_verified_at),r.legacy_source||'webapp'
-    ];
-    return values.map((v,index)=> index===14
-      ? {value:Number(v||0),type:Number,format:'"Rp" #,##0',alignVertical:'top',bottomBorderStyle:BORDER.style,bottomBorderColor:BORDER.color}
-      : cell(v,{bottomBorderStyle:BORDER.style,bottomBorderColor:BORDER.color})
-    );
+    const nik=nikData.map.get(r.id)||null;
+    return COLUMNS.map(([,,get,kind])=>{
+      const v=get(r,i,nik);
+      return kind==='money'
+        ? {value:Number(v||0),type:Number,format:'"Rp" #,##0',alignVertical:'top',bottomBorderStyle:BORDER.style,bottomBorderColor:BORDER.color}
+        : cell(v,{bottomBorderStyle:BORDER.style,bottomBorderColor:BORDER.color});
+    });
   });
-  const columns=WIDTHS.map(width=>({width}));
+  const columns=COLUMNS.map(([,width])=>({width}));
   const buffer=await writeExcelFile([titleRow,metaRow,emptyRow,headerRow,...rows],{columns,stickyRowsCount:4,orientation:'landscape'},{fontFamily:'Lato',fontSize:10}).toBuffer();
   return new Response(buffer,{headers:{'Content-Type':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','Content-Disposition':'attachment; filename="pendaftar-preseptor-2026.xlsx"','Cache-Control':'no-store'}});
 }

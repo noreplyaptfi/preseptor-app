@@ -1415,3 +1415,70 @@ h1,h2,h3,h4,.brand,.btn,.status,.eyebrow{font-family:var(--font-lato),Lato,Arial
   .docs-filters select{flex:1 1 100%}
   .docs-group-actions{width:100%}
 }
+
+/* v0.8.5 — Peserta SKP & NIK */
+.nik-mono{font-variant-numeric:tabular-nums;letter-spacing:.06em}
+input.nik-mono{font-size:16px}
+.nik-card-required{border-color:#f3c98b;box-shadow:0 0 0 3px rgba(243,201,139,.18)}
+.nik-current{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2)}
+.nik-current-value small{display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.nik-current-value strong{display:block;font-size:20px;color:var(--brand-dark);margin:3px 0}
+.nik-current-value span{font-size:12px;color:var(--muted)}
+.nik-current-actions{display:flex;gap:8px;flex-wrap:wrap}
+.nik-current-actions .btn,.skp-detail-actions .btn{display:inline-flex;align-items:center;gap:6px}
+.nik-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.nik-form .field small.danger-text{color:var(--danger)}
+.nik-consent{margin:4px 0 14px}
+.nik-form-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.nik-privacy{display:flex;align-items:center;gap:6px;margin:12px 0 0;font-size:12px;color:var(--muted)}
+.nik-reminder-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;background:linear-gradient(135deg,#fffaf0,#fff3dc);border-color:#f3d28e}
+.nik-reminder-card h2{margin:4px 0 5px}
+.nik-reminder-card p{margin:0;color:#5b4a2a;line-height:1.55}
+.nik-reminder-icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#fff;color:var(--warn);border:1px solid #f3d28e}
+.nik-reminder-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;margin-bottom:16px;border-radius:12px;background:var(--warn-bg);border:1px solid #f3d28e;color:var(--warn);font-size:14px}
+.nik-reminder-bar span{flex:1 1 220px}
+.skp-chips{display:inline-flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.skp-chip,.nik-chip{display:inline-flex;align-items:center;width:max-content;font-size:9px;font-weight:850;border-radius:999px;padding:3px 7px;letter-spacing:.03em;line-height:1.2}
+.skp-chip{background:#eaf1ff;color:#1d4ed8;border:1px solid #bfd4fb}
+.nik-chip.ok{background:#e8f6ee;color:#15803d;border:1px solid #bde5cb}
+.nik-chip.missing{background:#fff5df;color:#9a4d05;border:1px solid #f3d28e}
+.participant-detail-item strong .skp-chip{display:inline-flex;font-size:9px;text-transform:none;letter-spacing:.03em;color:#1d4ed8;margin:0 4px 0 0;vertical-align:1px}
+.participant-detail-item small{display:block;font-size:11px;margin-top:3px}
+.skp-detail{padding-top:4px}
+.skp-detail-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.participant-detail-body .skp-detail-head h3{margin:0}
+.skp-detail-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.skp-nik-form{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}
+.skp-nik-form .field{margin-bottom:8px}
+.skp-readonly-note{font-size:11px;margin:10px 0 0}
+.skp-overview-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.skp-overview-grid button{display:grid;gap:3px;text-align:left;padding:14px;border:1px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;color:inherit;transition:border-color .15s,box-shadow .15s}
+.skp-overview-grid button:hover{border-color:#9db8ef;box-shadow:0 6px 16px rgba(17,24,93,.07)}
+.skp-overview-grid span{font-size:12px;font-weight:750;color:var(--muted)}
+.skp-overview-grid strong{font-size:26px;color:var(--brand-dark);line-height:1.1}
+.skp-overview-grid small{font-size:12px;color:var(--muted)}
+.skp-overview-grid button.ok strong{color:#15803d}
+.skp-overview-grid button.warn{background:var(--warn-bg);border-color:#f3d28e}
+.skp-overview-grid button.warn strong{color:var(--warn)}
+.skp-progress{height:8px;border-radius:999px;background:#edf2fa;overflow:hidden;margin-top:14px}
+.skp-progress span{display:block;height:100%;background:#16a34a;border-radius:inherit;transition:width .3s}
+.skp-overview-actions{display:flex;justify-content:flex-end;margin-top:12px}
+.skp-overview-actions .btn{display:inline-flex;align-items:center;gap:6px}
+.admin-filters.has-skp{grid-template-columns:minmax(220px,1fr) 180px 150px 200px}
+.table-tools > div:last-child{display:flex;gap:8px;flex-wrap:wrap}
+.skp-bulk{display:grid;gap:12px;text-align:left}
+.skp-bulk-mode{display:inline-flex;padding:4px;border-radius:12px;background:#f1f5fb;border:1px solid var(--line);gap:4px;width:max-content;max-width:100%}
+.skp-bulk-mode button{border:0;background:transparent;padding:8px 12px;border-radius:9px;font-weight:750;font-size:13px;color:var(--muted);cursor:pointer}
+.skp-bulk-mode button.active{background:#fff;color:var(--brand-dark);box-shadow:0 1px 3px rgba(17,24,93,.12)}
+.skp-bulk textarea{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+.skp-notfound{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;overflow-wrap:anywhere}
+@media(max-width:1200px){.admin-filters.has-skp{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.skp-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){
+  .nik-form-grid{grid-template-columns:1fr}
+  .nik-reminder-card{grid-template-columns:1fr}
+  .nik-reminder-card .btn{width:100%}
+  .nik-reminder-icon{display:none}
+  .nik-form-actions .btn{flex:1 1 auto}
+}
+@media(max-width:700px){.admin-filters.has-skp{grid-template-columns:1fr}}

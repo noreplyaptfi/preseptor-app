@@ -39,7 +39,8 @@ export const EVENT_FLOW=[
     {title:'Selesaikan kasus khusus',copy:'Untuk kendala yang sudah dikonfirmasi panitia (misalnya presensi gagal), gunakan Check-in manual bila masih relevan, atau Terbitkan manual dengan alasan yang jelas.',to:'certificates',cta:'Terbitkan manual'},
     {title:'Finalkan template & rilis',copy:'Cek teks sertifikat (penandatangan, tanggal, format nomor) lewat tombol Contoh. Setelah template final, klik Rilis ke peserta.',to:'certificates',cta:'Pengaturan template'},
     {title:'Bagikan dokumentasi',copy:'Simpan foto & video di Google Drive / Google Photos / YouTube (akses: siapa saja yang memiliki link), lalu tempel tautannya di menu Dokumentasi. Bisa banyak tautan sekaligus dan dikelompokkan per hari.',to:'documentation',cta:'Dokumentasi'},
-    {title:'Export laporan',copy:'Export Excel tersedia di Command Center (presensi), Pretest, Posttest (termasuk semua attempt), Evaluasi (rekap & jawaban), dan Sertifikat. Akun TEST tidak ikut export.',to:'dayh',cta:'Export presensi'}
+    {title:'Export laporan',copy:'Export Excel tersedia di Command Center (presensi), Pretest, Posttest (termasuk semua attempt), Evaluasi (rekap & jawaban), dan Sertifikat. Akun TEST tidak ikut export.',to:'dayh',cta:'Export presensi'},
+    {title:'Kumpulkan NIK peserta SKP',copy:'Peserta SKP (ditandai di Pendaftar) wajib mengisi NIK di Profil Saya dan mendapat pengingat di dashboard; peserta lain boleh mengosongkan. Pantau di Ringkasan → Peserta SKP & NIK, kirim pengingat lewat Pengumuman (penerima "Peserta SKP yang belum mengisi NIK"), lalu Export Excel dengan filter SKP untuk mengambil kolom NIK.',to:'participants',cta:'Pendaftar'}
   ]}
 ];
 
@@ -62,7 +63,8 @@ const ADMIN_FLOW=[
   ['Penolakan & pengunduran diri','Jika salah satu dokumen tidak valid, Super Admin/Admin Event dapat menolak pendaftaran dari detail peserta. Pendaftaran ditolak dan withdrawal yang disetujui tidak memakai kuota, tetapi datanya tetap tersimpan.'],
   ['Refund','Review pengajuan refund, ubah menjadi Siap Diproses, buat Batch, Export Excel untuk transfer massal, lalu tandai batch Selesai setelah transfer.'],
   ['Data Master & Homebase','Kelola jenis tempat praktik, minimum pengalaman, dan daftar perguruan tinggi. Opsi yang dinonaktifkan tidak menghapus data lama.'],
-  ['Pengumuman & form','Gunakan Pengumuman untuk broadcast peserta dan Status Form untuk buka/tutup/maintenance pendaftaran.']
+  ['Pengumuman & form','Gunakan Pengumuman untuk broadcast peserta dan Status Form untuk buka/tutup/maintenance pendaftaran.'],
+  ['Peserta SKP & NIK','Status SKP diatur Super Admin/Admin Event: per peserta dari detail peserta (Tandai SKP / Keluarkan dari SKP) atau sekaligus lewat tombol Tandai SKP sekaligus (tempel Nomor Pendaftaran). Peserta SKP wajib mengisi NIK; peserta lain opsional dan tidak diingatkan. NIK lengkap hanya terlihat oleh Super Admin/Admin Event dan di Export Excel.']
 ];
 
 function canOpen(role,to){

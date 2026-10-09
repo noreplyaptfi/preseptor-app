@@ -5,6 +5,7 @@ import { useEffect,useMemo,useRef,useState } from 'react';
 import { getSupabaseBrowser } from '../lib/supabase-browser';
 import UniversityCombobox from './UniversityCombobox';
 import ActionDialog from './ActionDialog';
+import NikCard from './NikCard';
 
 const requestLabel={email_change:'Perubahan email',attendance_mode_change:'Perubahan mode',withdrawal:'Pengunduran diri'};
 const statusLabel={pending:'Menunggu review',approved:'Disetujui',rejected:'Ditolak',cancelled:'Dibatalkan',requested:'Diajukan',under_review:'Sedang direview',ready:'Siap diproses',processing:'Sedang diproses',refunded:'Sudah direfund'};
@@ -132,6 +133,9 @@ export default function ParticipantProfile({initialRegistration,onChanged}){
       </div>
       {!profileLocked&&<div className="profile-actions"><button className="btn btn-brand-primary" disabled={busy}>{busy?'Menyimpan...':'Simpan Profil'}</button></div>}
     </form>
+
+    {/* v0.8.5 — NIK: wajib untuk peserta SKP, opsional untuk peserta lain. */}
+    <NikCard registration={initialRegistration} onSaved={onChanged}/>
 
     <section className="participant-card self-service-card">
       <div className="participant-card-head"><div><div className="eyebrow brand-blue">Perubahan Terbatas</div><h2>Ajukan perubahan</h2><p>Email dan mode kehadiran perlu persetujuan panitia.</p></div></div>

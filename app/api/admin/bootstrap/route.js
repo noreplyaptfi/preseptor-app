@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '../../../../lib/auth';
 import { getSupabaseAdmin } from '../../../../lib/supabase-admin';
 import { normalizeName,normalizeInstitution } from '../../../../lib/normalization';
+import { nikRowsForEvent,withNikSummary } from '../../../../lib/nik-data';
 
 function latestDocuments(list=[]){const out={};for(const doc of list){if(!out[doc.document_type])out[doc.document_type]=doc}return out}
 // v0.7.3 — jumlah antrean untuk badge menu admin (hanya hitungan, tanpa data pribadi).
@@ -32,7 +33,9 @@ export async function GET(request){
   const data=registrationsResult.data||[];
   const softKeys=new Map();
   for(const r of data){const key=`${normalizeName(r.full_name)}|${normalizeInstitution(r.university)}`;if(key!=='|')softKeys.set(key,(softKeys.get(key)||0)+1)}
-  const registrations=data.map(r=>{const documents=latestDocuments(r.registration_documents||[]);const key=`${normalizeName(r.full_name)}|${normalizeInstitution(r.university)}`;return {...r,registration_documents:undefined,documents,document_types:Object.keys(documents),possible_duplicate:(softKeys.get(key)||0)>1}});
+  // v0.8.5 — ringkasan NIK per peserta (status terisi + 4 digit terakhir). NIK lengkap tidak dikirim di sini.
+  const nikData=await nikRowsForEvent(db,event.id);
+  const registrations=data.map(r=>{const documents=latestDocuments(r.registration_documents||[]);const key=`${normalizeName(r.full_name)}|${normalizeInstitution(r.university)}`;const row={...r,registration_documents:undefined,documents,document_types:Object.keys(documents),possible_duplicate:(softKeys.get(key)||0)>1};return nikData.ready?withNikSummary(row,nikData.map.get(r.id)):row});
   const navCounts=await queueCounts(db,event.id,auth.adminUser.role);
   const offlineVerified=registrations.filter(x=>x.attendance_mode==='Offline'&&x.overall_status==='verified').length;
   const checkedIn=registrations.filter(x=>x.attendance_mode==='Offline'&&x.checked_in_at).length;

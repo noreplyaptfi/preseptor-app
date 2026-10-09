@@ -2,11 +2,13 @@
 import { useEffect,useState } from 'react';
 import NavIcon from './NavIcon';
 import BrandMark from './BrandMark';
+import { needsNik } from '../lib/nik';
 
 // v0.7.3 — Navigasi peserta: sidebar berkelompok dengan penanda status (desktop & drawer HP),
 // topbar HP, dan tombol bawah (Status · Hadir · Tes · Info · Menu).
 // v0.8.0 — + Virtual Background, Materi, Sertifikat, Panduan.
 // v0.8.4 — + Dokumentasi.
+// v0.8.5 — Penanda Profil Saya bila peserta SKP belum mengisi NIK.
 
 export const TAB_LABELS={registration:'Status Pendaftaran',profile:'Profil Saya',attendance:'Kehadiran',access:'Akses Acara',pretest:'Pretest',evaluation:'Evaluasi',posttest:'Posttest',announcements:'Pengumuman',backgrounds:'Virtual Background',materials:'Materi',documentation:'Dokumentasi',certificate:'Sertifikat',guide:'Panduan'};
 const TESTS=[['pretest','Pretest','edit'],['evaluation','Evaluasi','star'],['posttest','Posttest','check']];
@@ -28,6 +30,7 @@ export function navMarkers(data,summary){
     const verified=data.requirements_status==='valid'&&data.payment_status==='verified';
     const needs=['incomplete','rejected'].includes(data.requirements_status)||data.payment_status==='rejected'||(data.payment_status==='pending'&&!data.documents?.payment_proof);
     out.registration=inactive?null:(verified||data.is_test_account)?{type:'done',hint:'Terverifikasi'}:needs?{type:'todo',hint:'Perlu dilengkapi'}:{type:'wait',hint:'Menunggu verifikasi'};
+    if(needsNik(data))out.profile={type:'todo',hint:'NIK wajib diisi (SKP)'};
   }
   const att=summary?.attendance;
   if(att?.enabled&&att.days?.length){
@@ -138,7 +141,7 @@ export function ParticipantTabbar({tab,select,openMenu,unreadCount,markers}){
       <Tab active={!sheet&&tab==='attendance'} icon="calendar-check" label="Hadir" onClick={()=>go('attendance')} dot={markers.attendance?.type==='todo'}/>
       <Tab active={testActive||sheet} icon="tests" label="Tes" onClick={()=>setSheet(v=>!v)} dot={testTodo}/>
       <Tab active={!sheet&&tab==='announcements'} icon="bell" label="Info" onClick={()=>go('announcements')} badge={unreadCount}/>
-      <Tab active={!sheet&&['profile','access','backgrounds','materials','documentation','guide'].includes(tab)} icon="menu" label="Menu" onClick={()=>{setSheet(false);openMenu()}}/>
+      <Tab active={!sheet&&['profile','access','backgrounds','materials','documentation','guide'].includes(tab)} icon="menu" label="Menu" onClick={()=>{setSheet(false);openMenu()}} dot={markers.profile?.type==='todo'}/>
     </nav>
     {sheet&&<>
       <button type="button" className="sheet-backdrop" onClick={()=>setSheet(false)} aria-label="Tutup"/>
