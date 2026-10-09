@@ -190,7 +190,7 @@ export default function CertificatesAdmin(){
 
 const GROUPS=[
   ['umum','Teks halaman 1','Dipakai di sertifikat peserta, pemateri, dan moderator (bahasa Indonesia).'],
-  ['halaman2','Halaman 2 · tabel materi','Dicetak di semua sertifikat. Satu materi per baris: Materi | 1,5. Apit judul dengan garis bawah (_judul_) agar tercetak miring. Total dihitung otomatis.'],
+  ['halaman2','Halaman 2 · tabel materi','Dicetak di semua sertifikat. Satu materi per baris: Materi | 1,5. Kata yang diapit garis bawah tercetak miring, boleh sebagian kata: Peran Preseptor Sebagai _Role Model_ dan Edukator | 1,5. Total dihitung otomatis.'],
   ['inggris','Versi bahasa Inggris','Untuk pemateri/moderator yang sertifikatnya berbahasa Inggris. Nama penandatangan, tempat terbit, nomor, dan tanda tangan sama dengan versi Indonesia.']
 ];
 
@@ -198,7 +198,7 @@ function SyllabusPreview({text,lang}){
   const s=parseSyllabus(text);
   if(!s.rows.length)return <div className="alert alert-error compact-alert">Belum ada baris yang valid. Contoh: Pretes | 0,25</div>;
   return <table className="syllabus-preview"><thead><tr><th>{lang==='en'?'Topic':'Materi'}</th><th>{lang==='en'?'Duration (JEP)':'Durasi (JEP)'}</th></tr></thead>
-    <tbody>{s.rows.map((r,i)=><tr key={i}><td>{r.italic?<i>{r.title}</i>:r.title}</td><td>{formatHours(r.hours,lang)}</td></tr>)}</tbody>
+    <tbody>{s.rows.map((r,i)=><tr key={i}><td>{(r.parts||[{text:r.title,italic:r.italic}]).map((p,k)=>p.italic?<i key={k}>{p.text}</i>:<span key={k}>{p.text}</span>)}</td><td>{formatHours(r.hours,lang)}</td></tr>)}</tbody>
     <tfoot><tr><td>Total</td><td>{formatHours(s.total,lang)}</td></tr></tfoot></table>;
 }
 
